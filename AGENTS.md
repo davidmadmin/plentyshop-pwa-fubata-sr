@@ -4,7 +4,7 @@ Welcome to the **PlentyONE PWA migration workspace**. This codebase starts from 
 
 ## Repository focus
 
-- **Target architecture:** Nuxt 3 + TypeScript + Storefront UI components with TailwindCSS utilities. The goal is to replace the legacy Ceres templates from plentyShop LTS with native Vue building blocks inside this PWA.
+- **Target architecture:** Nuxt 4 + TypeScript + Storefront UI components with TailwindCSS utilities. The goal is to replace the legacy Ceres templates from plentyShop LTS with native Vue building blocks inside this PWA.
 - **Reference implementation:** The LTS-era add-ons (header/footer rebuild, countdown timer, shipping icons, free-shipping progress bar, animated search placeholder, etc.) live in the Hammer Shops repo. Treat that repository as a design and behavior specification while rebuilding the features here in Vue and composables instead of inline DOM hacks.
 - **Two-app turborepo:**
   - `apps/web/` – Nuxt storefront. Most feature work happens in `app/components`, `app/pages`, `app/assets/style.scss`, and domain-specific `app/composables`.
