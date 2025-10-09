@@ -19,7 +19,7 @@ export interface UseSiteConfigurationState {
   blockUuid: string;
 }
 
-export type LoadGoogleFont = (font: string) => void;
+export type LoadFont = (font: string) => void;
 export type UpdateNewBlockPosition = (position: number) => void;
 export type OpenDrawerView = (view: DrawerView, block?: Block) => void;
 export type TogglePageModal = (value: boolean) => void;
@@ -45,7 +45,7 @@ export interface UseSiteConfiguration {
   setActiveSetting: SetActiveSetting;
   setActiveSubCategory: SetActiveSubCategory;
   updateNewBlockPosition: UpdateNewBlockPosition;
-  loadGoogleFont: LoadGoogleFont;
+  loadFont: LoadFont;
   openDrawerWithView: OpenDrawerView;
   togglePageModal: TogglePageModal;
   setSettingsCategory: SetSettingsCategory;

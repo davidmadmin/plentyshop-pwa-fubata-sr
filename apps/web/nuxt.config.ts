@@ -377,6 +377,20 @@ export default defineNuxtConfig({
           },
         },
         {
+          urlPattern: /^https:\/\/use\.typekit\.net\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'adobe-fonts-cache',
+            expiration: {
+              maxEntries: 10,
+              maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        {
           urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
           handler: 'NetworkFirst',
           options: {
