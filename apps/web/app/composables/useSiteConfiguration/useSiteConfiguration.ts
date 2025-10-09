@@ -11,7 +11,18 @@ import type { Block, CategoryTreeItem } from '@plentymarkets/shop-api';
 const INDUSTRY_FONT_NAME = 'industry';
 const INDUSTRY_STYLESHEET_URL = 'https://use.typekit.net/jej3tln.css';
 
-const createFontStyle = (fontName?: string) => (fontName ? `font-family: '${fontName}', sans-serif` : '');
+const createFontStyle = (fontName?: string) => {
+  const normalizedFontName = fontName?.trim();
+
+  if (!normalizedFontName) {
+    return '';
+  }
+
+  const isIndustryFont = normalizedFontName.toLowerCase() === INDUSTRY_FONT_NAME;
+  const resolvedFontName = isIndustryFont ? INDUSTRY_FONT_NAME : normalizedFontName;
+
+  return `font-family: '${resolvedFontName}', sans-serif`;
+};
 
 const ensureStylesheetAppended = (href: string) => {
   if (!import.meta.client || !href) {

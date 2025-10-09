@@ -1,6 +1,7 @@
 const INDUSTRY_FONT_NAME = 'industry';
+const configuredFont = (process.env.NUXT_PUBLIC_FONT || process.env.NUXT_FONT || 'Industry').trim();
 const industryFontLink =
-  (process.env.NUXT_PUBLIC_FONT || process.env.NUXT_FONT || '').toLowerCase() === INDUSTRY_FONT_NAME
+  configuredFont.toLowerCase() === INDUSTRY_FONT_NAME
     ? [
         {
           rel: 'stylesheet',
