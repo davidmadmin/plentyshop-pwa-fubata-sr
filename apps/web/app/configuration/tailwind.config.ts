@@ -4,6 +4,7 @@ import type { Config } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
 
 const fontFamilyText = process.env.NUXT_PUBLIC_FONT || 'Red Hat Text';
+const industryFontFamily = 'industry';
 
 export default {
   presets: [tailwindConfig],
@@ -43,7 +44,7 @@ export default {
       }),
       fontFamily: {
         body: [`${fontFamilyText}`, ...defaultTheme.fontFamily.sans],
-        editor: ['Red Hat Text', ...defaultTheme.fontFamily.sans],
+        editor: ['Red Hat Text', industryFontFamily, ...defaultTheme.fontFamily.sans],
       },
       colors: {
         primary: {

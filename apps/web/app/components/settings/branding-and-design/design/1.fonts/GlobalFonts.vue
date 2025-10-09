@@ -39,7 +39,7 @@ onMounted(async () => {
 });
 
 const { updateSetting, getSetting } = useSiteSettings('font');
-const { loadGoogleFont } = useSiteConfiguration();
+const { loadFont } = useSiteConfiguration();
 
 const font = computed({
   get: () => {
@@ -47,7 +47,7 @@ const font = computed({
   },
   set: (value: FontSetting) => {
     updateSetting(value.value);
-    loadGoogleFont(value.value);
+    loadFont(value.value);
   },
 });
 </script>

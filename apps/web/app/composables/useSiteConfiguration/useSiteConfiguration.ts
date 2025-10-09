@@ -1,12 +1,36 @@
 import type {
   UseSiteConfigurationReturn,
   UseSiteConfigurationState,
-  LoadGoogleFont,
+  LoadFont,
   DrawerView,
   SettingsType,
   SetActiveSetting,
 } from '~/composables/useSiteConfiguration/types';
 import type { Block, CategoryTreeItem } from '@plentymarkets/shop-api';
+
+const INDUSTRY_FONT_NAME = 'industry';
+const INDUSTRY_STYLESHEET_URL = 'https://use.typekit.net/jej3tln.css';
+
+const createFontStyle = (fontName?: string) => (fontName ? `font-family: '${fontName}', sans-serif` : '');
+
+const ensureStylesheetAppended = (href: string) => {
+  if (!import.meta.client || !href) {
+    return;
+  }
+
+  const existingLink = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).find(
+    (link) => link.href === href,
+  );
+
+  if (existingLink) {
+    return;
+  }
+
+  const link = document.createElement('link');
+  link.href = href;
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+};
 
 /**
  * @description Composable for managing site configuration.
@@ -17,6 +41,7 @@ import type { Block, CategoryTreeItem } from '@plentymarkets/shop-api';
  * ```
  */
 export const useSiteConfiguration: UseSiteConfigurationReturn = () => {
+  const runtimeFont = useRuntimeConfig().public.font as string | undefined;
   const state = useState<UseSiteConfigurationState>('siteConfiguration', () => ({
     data: [],
     drawerOpen: false,
@@ -26,7 +51,7 @@ export const useSiteConfiguration: UseSiteConfigurationReturn = () => {
     loading: false,
     placement: 'left',
     newBlockPosition: 0,
-    currentFont: useRuntimeConfig().public.font,
+    currentFont: createFontStyle(runtimeFont),
     drawerView: null,
     activeSetting: '',
     activeSubCategory: '',
@@ -34,23 +59,40 @@ export const useSiteConfiguration: UseSiteConfigurationReturn = () => {
     blockUuid: '',
   }));
 
+  if (import.meta.client && runtimeFont?.toLowerCase() === INDUSTRY_FONT_NAME) {
+    ensureStylesheetAppended(INDUSTRY_STYLESHEET_URL);
+  }
+
   /**
-   * @description Function for loading a google font.
-   * @return LoadGoogleFont
+   * @description Function for loading a font in the editor preview.
+   * @return LoadFont
    * @example
    * ``` ts
-   * loadGoogleFont('Jersey 10');
+   * loadFont('Jersey 10');
    * ```
    */
-  const loadGoogleFont: LoadGoogleFont = (fontName: string) => {
-    const link = document.createElement('link');
+  const loadFont: LoadFont = (fontName: string) => {
+    if (!fontName) {
+      return;
+    }
 
-    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;700&display=swap`;
-    link.rel = 'stylesheet';
+    const normalizedFontName = fontName.trim();
 
-    document.head.appendChild(link);
+    if (!normalizedFontName) {
+      return;
+    }
 
-    state.value.currentFont = `font-family: '${fontName}'`;
+    const isIndustryFont = normalizedFontName.toLowerCase() === INDUSTRY_FONT_NAME;
+
+    const stylesheetHref = isIndustryFont
+      ? INDUSTRY_STYLESHEET_URL
+      : `https://fonts.googleapis.com/css2?family=${encodeURIComponent(normalizedFontName)}:wght@400;700&display=swap`;
+
+    ensureStylesheetAppended(stylesheetHref);
+
+    state.value.currentFont = isIndustryFont
+      ? `font-family: '${INDUSTRY_FONT_NAME}', sans-serif`
+      : createFontStyle(normalizedFontName);
   };
 
   const openDrawerWithView = (view: DrawerView, block?: Block) => {
@@ -100,7 +142,7 @@ export const useSiteConfiguration: UseSiteConfigurationReturn = () => {
   return {
     ...toRefs(state.value),
     updateNewBlockPosition,
-    loadGoogleFont,
+    loadFont,
     openDrawerWithView,
     closeDrawer,
     togglePageModal,
