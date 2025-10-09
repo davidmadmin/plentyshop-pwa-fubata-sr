@@ -29,25 +29,56 @@ import Multiselect from 'vue-multiselect';
 import { SfIconInfo, SfTooltip } from '@storefront-ui/vue';
 import type { FontSetting } from './types';
 
-const fonts = ref([]);
+const INDUSTRY_FONT_OPTION: FontSetting = {
+  caption: 'Industry',
+  value: 'Industry',
+};
+
+const normalizeFonts = (fontOptions: FontSetting[] = []) => {
+  const withoutIndustry = fontOptions.filter(
+    (option) => option?.value?.toLowerCase() !== INDUSTRY_FONT_OPTION.value.toLowerCase(),
+  );
+
+  return [INDUSTRY_FONT_OPTION, ...withoutIndustry];
+};
+
+const fonts = ref<FontSetting[]>(normalizeFonts());
 
 onMounted(async () => {
-  const response = await fetch('/_nuxt-plenty/editor/fonts.json');
-  if (response.ok) {
-    fonts.value = await response.json();
+  try {
+    const response = await fetch('/_nuxt-plenty/editor/fonts.json');
+    if (response.ok) {
+      const fontOptions: FontSetting[] = await response.json();
+      fonts.value = normalizeFonts(fontOptions);
+    }
+  } catch {
+    fonts.value = normalizeFonts();
   }
+
+  const storedFont = getSetting();
+  const initialFont = storedFont || INDUSTRY_FONT_OPTION.value;
+
+  if (!storedFont) {
+    updateSetting(initialFont);
+  }
+
+  loadFont(initialFont);
 });
 
 const { updateSetting, getSetting } = useSiteSettings('font');
-const { loadGoogleFont } = useSiteConfiguration();
+const { loadFont } = useSiteConfiguration();
 
 const font = computed({
   get: () => {
-    return fonts.value.find((f: FontSetting) => f.value === getSetting()) ?? {};
+    return fonts.value.find((f: FontSetting) => f.value === getSetting()) ?? INDUSTRY_FONT_OPTION;
   },
   set: (value: FontSetting) => {
+    if (!value?.value) {
+      return;
+    }
+
     updateSetting(value.value);
-    loadGoogleFont(value.value);
+    loadFont(value.value);
   },
 });
 </script>

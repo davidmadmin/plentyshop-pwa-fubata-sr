@@ -3,7 +3,14 @@ import { tailwindConfig } from '@storefront-ui/vue/tailwind-config';
 import type { Config } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
 
-const fontFamilyText = process.env.NUXT_PUBLIC_FONT || 'Red Hat Text';
+const industryFontFamily = 'industry';
+const defaultFontName = 'Industry';
+const configuredFont = (process.env.NUXT_PUBLIC_FONT || process.env.NUXT_FONT || defaultFontName).trim();
+const isIndustryFont = configuredFont.toLowerCase() === industryFontFamily;
+const fontFamilyText = isIndustryFont ? industryFontFamily : configuredFont;
+const editorFontFamily = isIndustryFont
+  ? [industryFontFamily, 'Red Hat Text', ...defaultTheme.fontFamily.sans]
+  : [configuredFont, industryFontFamily, ...defaultTheme.fontFamily.sans];
 
 export default {
   presets: [tailwindConfig],
@@ -42,8 +49,8 @@ export default {
         },
       }),
       fontFamily: {
-        body: [`${fontFamilyText}`, ...defaultTheme.fontFamily.sans],
-        editor: ['Red Hat Text', ...defaultTheme.fontFamily.sans],
+        body: [fontFamilyText, ...defaultTheme.fontFamily.sans],
+        editor: editorFontFamily,
       },
       colors: {
         primary: {

@@ -1,3 +1,15 @@
+const INDUSTRY_FONT_NAME = 'industry';
+const configuredFont = (process.env.NUXT_PUBLIC_FONT || process.env.NUXT_FONT || 'Industry').trim();
+const industryFontLink =
+  configuredFont.toLowerCase() === INDUSTRY_FONT_NAME
+    ? [
+        {
+          rel: 'stylesheet',
+          href: 'https://use.typekit.net/jej3tln.css',
+        },
+      ]
+    : [];
+
 export const metaDefaults = {
   title: process.env.NUXT_PUBLIC_META_TITLE || process.env.METATITLE || 'PlentyONE Shop',
   description: process.env.NUXT_PUBLIC_META_DESCRIPTION || process.env.METADESC || 'Demo shop for PlentyONE Shop',
@@ -31,5 +43,6 @@ export const appConfiguration = {
       { property: 'og:title', content: openGraph.title },
       { property: 'og:url', content: process.env.API_ENDPOINT },
     ],
+    link: industryFontLink,
   },
 };
