@@ -136,10 +136,15 @@ const shippingBlock = computed<
     rawContent.timezone = DEFAULT_TIMEZONE;
   }
 
-  rawContent.workdays = {
-    ...DEFAULT_WORKDAYS,
-    ...(rawContent.workdays || {}),
-  } as ShippingCountdownTimerWorkdays;
+  if (!rawContent.workdays) {
+    rawContent.workdays = { ...DEFAULT_WORKDAYS } as ShippingCountdownTimerWorkdays;
+  } else {
+    (Object.keys(DEFAULT_WORKDAYS) as Array<keyof ShippingCountdownTimerWorkdays>).forEach((day) => {
+      if (rawContent.workdays?.[day] === undefined) {
+        rawContent.workdays[day] = DEFAULT_WORKDAYS[day];
+      }
+    });
+  }
 
   return rawContent as ShippingCountdownTimerContent & { workdays: ShippingCountdownTimerWorkdays };
 });
