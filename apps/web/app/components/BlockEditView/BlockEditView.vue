@@ -53,6 +53,7 @@ const blockTypeNames: Record<string, string> = {
   TextCard: 'Rich Text',
   MultiGrid: 'Layout',
   Footer: 'Footer',
+  ShippingCountdownTimer: 'Shipping countdown timer',
 };
 
 const getBlockTypeName = (blockType: string) => {

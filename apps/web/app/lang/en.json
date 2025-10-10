@@ -1234,5 +1234,30 @@
       }
     }
   },
+  "shippingCountdownTimer": {
+    "leadingText": "Order within ",
+    "midText": ", so that your parcel leaves our warehouse ",
+    "closingText": ".",
+    "today": "today",
+    "tomorrow": "tomorrow, {weekday} {date}",
+    "dayAfterTomorrow": "the day after tomorrow, {weekday} {date}",
+    "nextWeekday": "next {weekday}, {date}",
+    "weekdayOnDate": "{weekday}, {date}",
+    "weekdays": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
+    "time": {
+      "days": "{count} day | {count} days",
+      "hours": "{count} hour | {count} hours",
+      "minutes": "{count} minute | {count} minutes",
+      "seconds": "{count} second | {count} seconds"
+    }
+  },
   "cancelOrder": "Cancel order"
 }

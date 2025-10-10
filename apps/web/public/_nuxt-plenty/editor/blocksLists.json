@@ -1246,6 +1246,58 @@
       }
     ]
   },
+  "information": {
+    "category": "information",
+    "accessControl": ["content", "productCategory", "product"],
+    "title": "Information",
+    "blockName": "ShippingCountdownTimer",
+    "variations": [
+      {
+        "title": "Shipping countdown timer",
+        "image": "https://cdn02.plentymarkets.com/v5vzmmmcb10k/frontend/PWA/placeholder-image.png",
+        "template": {
+          "en": {
+            "name": "ShippingCountdownTimer",
+            "type": "content",
+            "meta": { "uuid": "b3c1d5f0-8a5b-4e2d-9c71-1234567890ab" },
+            "content": {
+              "cutoffTime": "13:00",
+              "timezone": "Europe/Berlin",
+              "iconUrl": "https://cdn02.plentymarkets.com/nteqnk1xxnkn/frontend/shipping_9288277.svg",
+              "workdays": {
+                "monday": true,
+                "tuesday": true,
+                "wednesday": true,
+                "thursday": true,
+                "friday": true,
+                "saturday": false,
+                "sunday": false
+              }
+            }
+          },
+          "de": {
+            "name": "ShippingCountdownTimer",
+            "type": "content",
+            "meta": { "uuid": "c4d2e6f1-9b6c-4f3e-8d82-abcdef123456" },
+            "content": {
+              "cutoffTime": "13:00",
+              "timezone": "Europe/Berlin",
+              "iconUrl": "https://cdn02.plentymarkets.com/nteqnk1xxnkn/frontend/shipping_9288277.svg",
+              "workdays": {
+                "monday": true,
+                "tuesday": true,
+                "wednesday": true,
+                "thursday": true,
+                "friday": true,
+                "saturday": false,
+                "sunday": false
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
   "forms": {
     "category": "forms",
     "accessControl": ["content", "productCategory", "product"],

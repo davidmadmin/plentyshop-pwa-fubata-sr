@@ -27,6 +27,10 @@ export const noI18nGlobals = {
                 // Checking for $t and $n in template expressions
                 // n-function only with 'currency' argument
                 function checkSourceCode(node) {
+                    if (!node || typeof node.type !== 'string') {
+                        return;
+                    }
+
                     if (node.type === 'VExpressionContainer' || node.type === 'VDirectiveKey') {
                         const text = sourceCode.getText(node);
 
