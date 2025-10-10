@@ -196,22 +196,23 @@ const isConfiguredWorkday = (date: Date, workdayIndices: number[]) => {
 const getNextWorkday = (date: Date, workdayIndices: number[]) => {
   const candidate = new Date(date);
   const MAX_LOOKAHEAD_DAYS = 366;
-  let iterations = 0;
 
-  while (iterations < MAX_LOOKAHEAD_DAYS) {
+  for (let iterations = 0; iterations < MAX_LOOKAHEAD_DAYS; iterations += 1) {
     const currentDay = candidate.getDate();
-    const isInvalidDate = Number.isNaN(currentDay);
 
-    if (!isInvalidDate && isConfiguredWorkday(candidate, workdayIndices)) {
-      return candidate;
-    }
-
-    if (isInvalidDate) {
+    if (Number.isNaN(currentDay)) {
       break;
     }
 
     candidate.setDate(currentDay + 1);
-    iterations += 1;
+
+    if (Number.isNaN(candidate.getDate())) {
+      break;
+    }
+
+    if (isConfiguredWorkday(candidate, workdayIndices)) {
+      return candidate;
+    }
   }
 
   return new Date(date);
