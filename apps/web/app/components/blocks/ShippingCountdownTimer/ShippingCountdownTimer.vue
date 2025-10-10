@@ -26,6 +26,7 @@ import {
   DEFAULT_ICON_URL,
   DEFAULT_TIMEZONE,
   DEFAULT_WORKDAYS,
+  TIMEZONE_OPTIONS,
 } from './defaults';
 
 const props = defineProps<ShippingCountdownTimerProps>();
@@ -51,7 +52,29 @@ const countdown = reactive({
   ready: false,
 });
 
-const timezone = computed(() => props.content.timezone || DEFAULT_TIMEZONE);
+const VALID_TIMEZONES = new Set(TIMEZONE_OPTIONS.map((option) => option.value));
+
+const isValidTimezone = (zone: string) => {
+  if (!zone) return false;
+  if (VALID_TIMEZONES.has(zone)) return true;
+
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const timezone = computed(() => {
+  const configuredTimezone = props.content.timezone || DEFAULT_TIMEZONE;
+
+  if (!isValidTimezone(configuredTimezone)) {
+    return DEFAULT_TIMEZONE;
+  }
+
+  return configuredTimezone;
+});
 
 const resolvedWorkdays = computed(() => ({
   ...DEFAULT_WORKDAYS,
@@ -168,18 +191,35 @@ const getNextWorkday = (date: Date, workdayIndices: number[]) => {
   return candidate;
 };
 
+const createDateTimeFormatter = (zone: string) => {
+  try {
+    return new Intl.DateTimeFormat('de-DE', {
+      timeZone: zone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+  } catch {
+    return new Intl.DateTimeFormat('de-DE', {
+      timeZone: DEFAULT_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+  }
+};
+
 const getCurrentDate = (zone: string) => {
   const now = new Date();
-  const formatter = new Intl.DateTimeFormat('de-DE', {
-    timeZone: zone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
+  const formatter = createDateTimeFormatter(zone);
 
   const parts = formatter.formatToParts(now).reduce<Record<string, string>>((acc, part) => {
     if (part.type !== 'literal') {

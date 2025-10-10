@@ -28,13 +28,16 @@
         <UiFormLabel for="shipping-countdown-timezone">
           {{ getEditorTranslation('timezone-label') }}
         </UiFormLabel>
-        <SfInput
+        <SfSelect
           id="shipping-countdown-timezone"
           v-model="shippingBlock.timezone"
-          type="text"
-          :placeholder="DEFAULT_TIMEZONE"
+          class="w-full"
           data-testid="shipping-countdown-timezone"
-        />
+        >
+          <option v-for="option in timezoneOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </SfSelect>
         <p class="mt-1 text-xs text-neutral-500">
           {{ getEditorTranslation('timezone-description') }}
         </p>
@@ -86,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { SfCheckbox, SfInput } from '@storefront-ui/vue';
+import { SfCheckbox, SfInput, SfSelect } from '@storefront-ui/vue';
 import type {
   ShippingCountdownTimerContent,
   ShippingCountdownTimerFormProps,
@@ -97,6 +100,7 @@ import {
   DEFAULT_ICON_URL,
   DEFAULT_TIMEZONE,
   DEFAULT_WORKDAYS,
+  TIMEZONE_OPTIONS,
 } from './defaults';
 
 const { data } = useCategoryTemplate();
@@ -139,6 +143,17 @@ const shippingBlock = computed<
 
   return rawContent as ShippingCountdownTimerContent & { workdays: ShippingCountdownTimerWorkdays };
 });
+
+const timezoneOptions = computed(() => {
+  const options = [...TIMEZONE_OPTIONS];
+  const currentTimezone = shippingBlock.value.timezone;
+
+  if (currentTimezone && !options.some((option) => option.value === currentTimezone)) {
+    options.push({ label: currentTimezone, value: currentTimezone });
+  }
+
+  return options;
+});
 </script>
 
 <i18n lang="json">
@@ -148,7 +163,7 @@ const shippingBlock = computed<
     "cutoff-time-label": "Cut-off time",
     "cutoff-time-description": "Orders placed before {time} on a shipping day leave the warehouse the same day.",
     "timezone-label": "Time zone",
-    "timezone-description": "Use an IANA time zone like Europe/Berlin.",
+    "timezone-description": "Choose the time zone used to calculate the countdown.",
     "icon-url-label": "Icon URL",
     "icon-url-description": "Leave empty to use the default icon URL.",
     "workdays-settings-label": "Shipping days",
@@ -166,7 +181,7 @@ const shippingBlock = computed<
     "cutoff-time-label": "Bestellschluss",
     "cutoff-time-description": "Bestellungen vor {time} an einem Versandtag verlassen noch am selben Tag das Lager.",
     "timezone-label": "Zeitzone",
-    "timezone-description": "Nutzen Sie eine IANA-Zeitzone wie Europe/Berlin.",
+    "timezone-description": "Wählen Sie die Zeitzone, die für den Countdown verwendet wird.",
     "icon-url-label": "Icon-URL",
     "icon-url-description": "Leer lassen, um das Standard-Icon zu verwenden.",
     "workdays-settings-label": "Versandtage",
