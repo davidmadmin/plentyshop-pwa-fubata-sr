@@ -1259,7 +1259,10 @@
           "en": {
             "name": "ShippingCountdownTimer",
             "type": "content",
-            "meta": { "uuid": "b3c1d5f0-8a5b-4e2d-9c71-1234567890ab" },
+            "meta": {
+              "uuid": "b3c1d5f0-8a5b-4e2d-9c71-1234567890ab",
+              "isGlobalTemplate": false
+            },
             "content": {
               "cutoffTime": "13:00",
               "timezone": "Europe/Berlin",
@@ -1278,7 +1281,10 @@
           "de": {
             "name": "ShippingCountdownTimer",
             "type": "content",
-            "meta": { "uuid": "c4d2e6f1-9b6c-4f3e-8d82-abcdef123456" },
+            "meta": {
+              "uuid": "c4d2e6f1-9b6c-4f3e-8d82-abcdef123456",
+              "isGlobalTemplate": false
+            },
             "content": {
               "cutoffTime": "13:00",
               "timezone": "Europe/Berlin",
