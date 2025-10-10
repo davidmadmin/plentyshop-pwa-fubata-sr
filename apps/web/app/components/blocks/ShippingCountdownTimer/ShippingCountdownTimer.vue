@@ -195,12 +195,26 @@ const isConfiguredWorkday = (date: Date, workdayIndices: number[]) => {
 
 const getNextWorkday = (date: Date, workdayIndices: number[]) => {
   const candidate = new Date(date);
+  const MAX_LOOKAHEAD_DAYS = 366;
+  let iterations = 0;
 
-  do {
-    candidate.setDate(candidate.getDate() + 1);
-  } while (!isConfiguredWorkday(candidate, workdayIndices));
+  while (iterations < MAX_LOOKAHEAD_DAYS) {
+    const currentDay = candidate.getDate();
+    const isInvalidDate = Number.isNaN(currentDay);
 
-  return candidate;
+    if (!isInvalidDate && isConfiguredWorkday(candidate, workdayIndices)) {
+      return candidate;
+    }
+
+    if (isInvalidDate) {
+      break;
+    }
+
+    candidate.setDate(currentDay + 1);
+    iterations += 1;
+  }
+
+  return new Date(date);
 };
 
 const createDateTimeFormatter = (zone: string) => {
@@ -233,16 +247,29 @@ const getCurrentDate = (zone: string) => {
   const now = new Date();
   const formatter = createDateTimeFormatter(zone);
 
-  const parts = formatter.formatToParts(now).reduce<Record<string, string>>((acc, part) => {
-    if (part.type !== 'literal') {
-      acc[part.type] = part.value;
-    }
-    return acc;
-  }, {});
+  try {
+    const parts = formatter.formatToParts(now).reduce<Record<string, string>>((acc, part) => {
+      if (part.type !== 'literal') {
+        acc[part.type] = part.value;
+      }
+      return acc;
+    }, {});
 
-  return new Date(
-    `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`,
-  );
+    const parsedDate = new Date(
+      `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`,
+    );
+
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  } catch (error) {
+    if (import.meta.dev) {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to parse zoned date for shipping countdown:', error);
+    }
+  }
+
+  return now;
 };
 
 const getTargetDates = (now: Date, workdayIndices: number[], cutoff: { hours: number; minutes: number }) => {
@@ -339,6 +366,10 @@ const updateCountdown = () => {
   }
 
   const now = getCurrentDate(timezone.value);
+  if (Number.isNaN(now.getTime())) {
+    countdown.ready = false;
+    return;
+  }
   const { target, shippingDate } = getTargetDates(now, activeWorkdayIndices.value, cutoffTime.value);
   const diffMs = Math.max(target.getTime() - now.getTime(), 0);
   const hoursLeft = diffMs / (60 * 60 * 1000);

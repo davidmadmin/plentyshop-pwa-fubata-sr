@@ -109,6 +109,19 @@
     }
   },
   {
+    "name": "ShippingCountdownTimer",
+    "type": "content",
+    "meta": {
+      "uuid": "e88bca34-a082-4349-b84e-1159a1d52054",
+      "isGlobalTemplate": false
+    },
+    "content": {
+      "cutoffTime": "16:00",
+      "timezone": "Europe/Berlin",
+      "iconUrl": "https://cdn02.plentymarkets.com/nteqnk1xxnkn/frontend/shipping_9288277.svg"
+    }
+  },
+  {
     "name": "ProductRecommendedProducts",
     "type": "content",
     "meta": {
