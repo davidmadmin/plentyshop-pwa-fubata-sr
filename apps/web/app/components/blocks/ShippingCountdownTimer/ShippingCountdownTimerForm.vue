@@ -123,6 +123,24 @@ const weekDays = [
   { key: 'sunday', translationKey: 'weekday-sunday' },
 ] as const;
 
+const ensureWorkdayDefaults = (
+  workdays?: Partial<ShippingCountdownTimerWorkdays>,
+): ShippingCountdownTimerWorkdays => {
+  if (!workdays) {
+    return { ...DEFAULT_WORKDAYS };
+  }
+
+  const normalized = workdays as ShippingCountdownTimerWorkdays;
+
+  (Object.keys(DEFAULT_WORKDAYS) as Array<keyof ShippingCountdownTimerWorkdays>).forEach((day) => {
+    if (typeof normalized[day] !== 'boolean') {
+      normalized[day] = DEFAULT_WORKDAYS[day];
+    }
+  });
+
+  return normalized;
+};
+
 const shippingBlock = computed<
   ShippingCountdownTimerContent & { workdays: ShippingCountdownTimerWorkdays }
 >(() => {
@@ -136,10 +154,11 @@ const shippingBlock = computed<
     rawContent.timezone = DEFAULT_TIMEZONE;
   }
 
-  rawContent.workdays = {
-    ...DEFAULT_WORKDAYS,
-    ...(rawContent.workdays || {}),
-  } as ShippingCountdownTimerWorkdays;
+  if (!rawContent.workdays) {
+    rawContent.workdays = ensureWorkdayDefaults();
+  } else {
+    ensureWorkdayDefaults(rawContent.workdays);
+  }
 
   return rawContent as ShippingCountdownTimerContent & { workdays: ShippingCountdownTimerWorkdays };
 });
