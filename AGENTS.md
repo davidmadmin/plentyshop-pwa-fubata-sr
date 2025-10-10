@@ -10,6 +10,15 @@ Welcome to the **PlentyONE PWA migration workspace**. This codebase starts from 
   - `apps/web/` – Nuxt storefront. Most feature work happens in `app/components`, `app/pages`, `app/assets/style.scss`, and domain-specific `app/composables`.
   - `apps/server/` – Middleware (TypeScript, tsup build). Extend it when a migrated feature needs server-side aggregation or proxy logic.
 
+### TurboRepo layout refresher
+
+- The monorepo uses TurboRepo to orchestrate builds. App-level commands (`npm run dev`, `npm run build`) fan out through Turbo pipelines, so prefer running tasks from the repository root unless a guide explicitly says otherwise.
+- `apps/server` is an Express-based Alokai Middleware skeleton. Key files:
+  - `src/index.ts` – server entry point bridging SDK calls to upstream services.
+  - `middleware.config.ts` – toggle and configure middleware connectors.
+  - `nodemon.json`, `jest.config.ts`, and `tsconfig.json` live alongside to support local development and tests.
+- `apps/web` follows the Nuxt 3 directory scheme (`app/components`, `app/pages`, `app/composables`, etc.). When mapping legacy Twig or SCSS, mirror Nuxt's structure to keep discoverability high.
+
 ## How to map LTS snippets into the PWA
 
 1. **Identify the target area** in the Hammer Shops repository (e.g., header Twig, footer layout, countdown JS).
@@ -21,12 +30,27 @@ Welcome to the **PlentyONE PWA migration workspace**. This codebase starts from 
 4. **Global configuration:** leverage `nuxt.config.ts`, middleware, and i18n files in `app/lang` to mirror language-dependent behaviors from LTS.
 5. **Server touchpoints:** if a migrated feature depends on REST endpoints that were previously consumed via IO plugin scripts, expose them via the middleware in `apps/server/src` and call them through the SDK.
 
+### Naming & module conventions
+
+- Functions live in their own folder with `Function.ts`, `index.ts`, optional `types.ts`, and colocated tests under `__tests__/`.
+- Composables go in `apps/web/app/composables/` and must be prefixed with `use`, camel-cased (`useProductReviews`), and bundle state updates internally via Nuxt's `useState` helpers.
+- Vue components follow PascalCase naming. Co-locate prop types as `{Component}Props` in a sibling `types.ts`, and export via `index.ts`. Storefront UI block components in `components/ui` reuse the same structure.
+
+### Data fetching & localization
+
+- Leverage the Alokai (VSF) SDK in tandem with Nuxt's `useAsyncData` and `useState` for remote data. Prefer composables that wrap SDK calls instead of ad-hoc fetches.
+- Mocked data from `@vue-storefront/integration-boilerplate-sdk` powers local development; wire up real connectors by adjusting `apps/server/middleware.config.ts` when targeting production services.
+- Localization uses Nuxt i18n with feature-scoped JSON files (e.g., `locale/{feature}.json`). Import only what a given page or component needs to keep bundles light.
+
 ## Developer workflow
 
 - Install dependencies at the repo root with `npm install`. Use `npm run dev` to start both middleware and the Nuxt storefront during development.
 - Generate boilerplate with the PlentyONE CLI (`npx plentyshop generate ...`) to stay aligned with project conventions.
 - Keep TypeScript strictness and ESLint/Prettier defaults intact; do not wrap imports in `try/catch`.
 - Tests: prefer Vitest for unit coverage and Cypress for end-to-end behavior when migrating interactive components.
+- Vitest config lives in `apps/web/vitest.config.mjs`; component tests rely on Vue Test Utils helpers in `vue-test-utils.extend.ts`. Keep `it('should …')` style descriptions to match lint rules.
+- Performance budgets are guarded by Lighthouse CI scripts (`npm run lhci:mobile`, configs in `/lighthouserc*.json`). Run `npm run build` beforehand if the production bundle is missing.
+- Use `npx nuxi analyze` (or run it inside `apps/web`) to inspect bundle size regressions before shipping heavy dependencies.
 
 ## Commit conventions
 
