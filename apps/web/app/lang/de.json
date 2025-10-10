@@ -1234,5 +1234,30 @@
       }
     }
   },
+  "shippingCountdownTimer": {
+    "leadingText": "Bestellen Sie innerhalb ",
+    "midText": ", damit Ihre Ware ",
+    "closingText": " unser Lager verlässt.",
+    "today": "heute",
+    "tomorrow": "Morgen, {weekday} den {date}",
+    "dayAfterTomorrow": "Übermorgen, {weekday} den {date}",
+    "nextWeekday": "nächsten {weekday}, den {date}",
+    "weekdayOnDate": "{weekday} den {date}",
+    "weekdays": {
+      "monday": "Montag",
+      "tuesday": "Dienstag",
+      "wednesday": "Mittwoch",
+      "thursday": "Donnerstag",
+      "friday": "Freitag",
+      "saturday": "Samstag",
+      "sunday": "Sonntag"
+    },
+    "time": {
+      "days": "{count} Tag | {count} Tage",
+      "hours": "{count} Stunde | {count} Stunden",
+      "minutes": "{count} Minute | {count} Minuten",
+      "seconds": "{count} Sekunde | {count} Sekunden"
+    }
+  },
   "cancelOrder": "Kauf abbrechen"
 }
