@@ -28,6 +28,13 @@ Welcome to the **PlentyONE PWA migration workspace**. This codebase starts from 
 - Keep TypeScript strictness and ESLint/Prettier defaults intact; do not wrap imports in `try/catch`.
 - Tests: prefer Vitest for unit coverage and Cypress for end-to-end behavior when migrating interactive components.
 
+## Commit conventions
+
+- Write commit messages that follow the [Conventional Commits 1.0.0 specification](https://www.conventionalcommits.org/en/v1.0.0/).
+- Format commit subjects as `<type>(optional scope): <short summary>` using lowercase `type` keywords such as `feat`, `fix`, `docs`, `refactor`, `test`, or `chore`.
+- Keep the summary imperative, limit it to 72 characters, and include scopes only when they add clarity (e.g., `feat(header): add countdown timer`).
+- Provide additional context in the body when necessary, separating it from the subject with a blank line and wrapping text at roughly 72 characters.
+
 ## Documentation & knowledge base
 
 - Core docs live in `README.md` and `GUIDE.md` (technical overview). Feature-specific notes should go into `docs/` alongside screenshots or architectural decisions.
