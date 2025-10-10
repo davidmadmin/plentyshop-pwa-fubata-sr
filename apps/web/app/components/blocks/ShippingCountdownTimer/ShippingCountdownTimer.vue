@@ -193,14 +193,24 @@ const isConfiguredWorkday = (date: Date, workdayIndices: number[]) => {
   return true;
 };
 
+const MAX_LOOKAHEAD_DAYS = 366;
+
 const getNextWorkday = (date: Date, workdayIndices: number[]) => {
+  if (!workdayIndices.length) {
+    return null;
+  }
+
   const candidate = new Date(date);
 
-  do {
+  for (let offset = 0; offset < MAX_LOOKAHEAD_DAYS; offset += 1) {
     candidate.setDate(candidate.getDate() + 1);
-  } while (!isConfiguredWorkday(candidate, workdayIndices));
 
-  return candidate;
+    if (isConfiguredWorkday(candidate, workdayIndices)) {
+      return candidate;
+    }
+  }
+
+  return null;
 };
 
 const createDateTimeFormatter = (zone: string) => {
@@ -245,7 +255,11 @@ const getCurrentDate = (zone: string) => {
   );
 };
 
-const getTargetDates = (now: Date, workdayIndices: number[], cutoff: { hours: number; minutes: number }) => {
+const getTargetDates = (
+  now: Date,
+  workdayIndices: number[],
+  cutoff: { hours: number; minutes: number },
+) => {
   const cutoffToday = new Date(now);
   cutoffToday.setHours(cutoff.hours, cutoff.minutes, 0, 0);
 
@@ -254,6 +268,9 @@ const getTargetDates = (now: Date, workdayIndices: number[], cutoff: { hours: nu
   }
 
   const nextWorkday = getNextWorkday(now, workdayIndices);
+  if (!nextWorkday) {
+    return null;
+  }
   const nextCutoff = new Date(nextWorkday);
   nextCutoff.setHours(cutoff.hours, cutoff.minutes, 0, 0);
 
@@ -339,7 +356,14 @@ const updateCountdown = () => {
   }
 
   const now = getCurrentDate(timezone.value);
-  const { target, shippingDate } = getTargetDates(now, activeWorkdayIndices.value, cutoffTime.value);
+  const targetDates = getTargetDates(now, activeWorkdayIndices.value, cutoffTime.value);
+
+  if (!targetDates) {
+    countdown.ready = false;
+    return;
+  }
+
+  const { target, shippingDate } = targetDates;
   const diffMs = Math.max(target.getTime() - now.getTime(), 0);
   const hoursLeft = diffMs / (60 * 60 * 1000);
   const showSeconds = hoursLeft < 1;

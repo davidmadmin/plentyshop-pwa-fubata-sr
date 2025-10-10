@@ -109,6 +109,28 @@
     }
   },
   {
+    "name": "ShippingCountdownTimer",
+    "type": "content",
+    "meta": {
+      "uuid": "7ac92d14-3e5b-4d1f-8a2c-b7c5e9f0d3a4",
+      "isGlobalTemplate": false
+    },
+    "content": {
+      "cutoffTime": "13:00",
+      "timezone": "Europe/Berlin",
+      "iconUrl": "https://cdn02.plentymarkets.com/nteqnk1xxnkn/frontend/shipping_9288277.svg",
+      "workdays": {
+        "monday": true,
+        "tuesday": true,
+        "wednesday": true,
+        "thursday": true,
+        "friday": true,
+        "saturday": false,
+        "sunday": false
+      }
+    }
+  },
+  {
     "name": "ProductRecommendedProducts",
     "type": "content",
     "meta": {
