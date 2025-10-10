@@ -76,12 +76,18 @@ const timezone = computed(() => {
   return configuredTimezone;
 });
 
-const resolvedWorkdays = computed(() => ({
-  ...DEFAULT_WORKDAYS,
-  ...(props.content.workdays || {}),
-}));
+const resolvedWorkdays = computed<ShippingCountdownTimerWorkdays>(() => {
+  const workdayOverrides = Object.fromEntries(
+    Object.entries(props.content.workdays ?? {}).filter(([, value]) => value !== undefined),
+  ) as Partial<ShippingCountdownTimerWorkdays>;
 
-const activeWorkdayIndices = computed(() =>
+  return {
+    ...DEFAULT_WORKDAYS,
+    ...workdayOverrides,
+  };
+});
+
+const activeWorkdayIndices = computed<number[]>(() =>
   (Object.entries(resolvedWorkdays.value) as [keyof ShippingCountdownTimerWorkdays, boolean][])
     .filter(([, enabled]) => enabled)
     .map(([day]) => DAY_TO_INDEX[day]),
@@ -108,7 +114,9 @@ const messageHtml = computed(() => {
   return `${escapeHtml(leadingText.value)}${timeHtml}${escapeHtml(midText.value)}${dateHtml}${escapeHtml(closingText.value)}`;
 });
 
-const cutoffTime = computed(() => parseCutoff(props.content.cutoffTime));
+const cutoffTime = computed<{ hours: number; minutes: number }>(() =>
+  parseCutoff(props.content.cutoffTime),
+);
 
 const holidayCache = new Map<number, Set<string>>();
 
@@ -152,17 +160,21 @@ const getHolidaySet = (year: number) => {
     holidays.add(formatDateKey(date));
   };
 
-  [
+  const FIXED_HOLIDAYS: Array<[number, number]> = [
     [0, 1],
     [4, 1],
     [9, 3],
     [11, 25],
     [11, 26],
-  ].forEach(([month, day]) => register(new Date(year, month, day)));
+  ];
+
+  FIXED_HOLIDAYS.forEach(([month, day]) => register(new Date(year, month ?? 0, day ?? 1)));
 
   const easterSunday = calculateEasterSunday(year);
 
-  [-2, 1, 39, 50, 60].forEach((offset) => register(addDays(easterSunday, offset)));
+  const MOVABLE_HOLIDAY_OFFSETS = [-2, 1, 39, 50, 60] as const;
+
+  MOVABLE_HOLIDAY_OFFSETS.forEach((offset) => register(addDays(easterSunday, offset)));
 
   register(new Date(year, 10, 1));
 
@@ -338,7 +350,7 @@ const updateCountdown = () => {
   countdown.ready = true;
 };
 
-let interval: ReturnType<typeof setInterval> | null = null;
+let interval: number | null = null;
 
 watch(
   [cutoffTime, activeWorkdayIndices, timezone],
@@ -356,27 +368,31 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (interval) {
-    clearInterval(interval);
+  if (interval !== null) {
+    window.clearInterval(interval);
   }
 });
 
-function parseCutoff(time?: string) {
-  const [fallbackHours, fallbackMinutes] = DEFAULT_CUTOFF_TIME.split(':').map((value) =>
-    Number.parseInt(value, 10),
-  );
-  const fallback = {
-    hours: Number.isNaN(fallbackHours) ? 13 : fallbackHours,
-    minutes: Number.isNaN(fallbackMinutes) ? 0 : fallbackMinutes,
+function parseCutoff(time?: string): { hours: number; minutes: number } {
+  const [fallbackHoursRaw, fallbackMinutesRaw] = DEFAULT_CUTOFF_TIME.split(':');
+  const parsedFallbackHours = Number.parseInt(fallbackHoursRaw ?? '', 10);
+  const parsedFallbackMinutes = Number.parseInt(fallbackMinutesRaw ?? '', 10);
+  const fallback: { hours: number; minutes: number } = {
+    hours: Number.isNaN(parsedFallbackHours) ? 16 : parsedFallbackHours,
+    minutes: Number.isNaN(parsedFallbackMinutes) ? 0 : parsedFallbackMinutes,
   };
   if (!time) return fallback;
 
   const match = time.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
   if (!match) return fallback;
 
+  const [, hoursMatch, minutesMatch] = match;
+  const hours = Number.parseInt(hoursMatch ?? '', 10);
+  const minutes = Number.parseInt(minutesMatch ?? '', 10);
+
   return {
-    hours: Number.parseInt(match[1], 10),
-    minutes: Number.parseInt(match[2], 10),
+    hours: Number.isNaN(hours) ? fallback.hours : hours,
+    minutes: Number.isNaN(minutes) ? fallback.minutes : minutes,
   };
 }
 </script>
