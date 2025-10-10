@@ -27,6 +27,7 @@ Welcome to the **PlentyONE PWA migration workspace**. This codebase starts from 
 - Generate boilerplate with the PlentyONE CLI (`npx plentyshop generate ...`) to stay aligned with project conventions.
 - Keep TypeScript strictness and ESLint/Prettier defaults intact; do not wrap imports in `try/catch`.
 - Tests: prefer Vitest for unit coverage and Cypress for end-to-end behavior when migrating interactive components.
+- Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for all commit messages (type, scope, description) so history stays consistent and machine-parsable.
 
 ## Documentation & knowledge base
 
