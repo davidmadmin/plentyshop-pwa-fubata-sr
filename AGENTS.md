@@ -44,6 +44,11 @@ Welcome to the **PlentyONE PWA migration workspace**. This codebase starts from 
 
 ## Developer workflow
 
+- **Upstream-friendly changes:** This repository is a fork that regularly pulls
+  updates from the upstream `plentyshop-pwa` project. Structure new features
+  and modifications in a way that keeps diffs minimal and avoids unnecessary
+  conflicts when upstream changes are merged.
+
 - Install dependencies at the repo root with `npm install`. Use `npm run dev` to start both middleware and the Nuxt storefront during development.
 - Generate boilerplate with the PlentyONE CLI (`npx plentyshop generate ...`) to stay aligned with project conventions.
 - Keep TypeScript strictness and ESLint/Prettier defaults intact; do not wrap imports in `try/catch`.
