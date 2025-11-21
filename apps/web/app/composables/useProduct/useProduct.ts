@@ -21,6 +21,7 @@ export const useProduct: UseProductReturn = (slug) => {
   const properties = useProductOrderProperties();
   const state = useState<UseProductState>(`useProduct-${slug}`, () => ({
     data: {} as Product,
+    fakeData: {} as Product,
     loading: false,
     breadcrumbs: [],
   }));
@@ -41,7 +42,11 @@ export const useProduct: UseProductReturn = (slug) => {
     state.value.loading = true;
     const { $i18n } = useNuxtApp();
     const route = useRoute();
-    const { setupBlocks } = useCategoryTemplate(route?.meta?.identifier as string, route.meta.type as string);
+    const { setupBlocks } = useCategoryTemplate(
+      route?.meta?.identifier as string,
+      route.meta.type as string,
+      useNuxtApp().$i18n.locale.value,
+    );
 
     const { data, error } = await useAsyncData(
       `fetchProduct-${params.id}-${params.variationId}-${$i18n.locale.value}`,
@@ -53,10 +58,9 @@ export const useProduct: UseProductReturn = (slug) => {
     await setupBlocks(
       (fetchedBlocks && fetchedBlocks.length > 0 ? fetchedBlocks : useProductTemplateData()) as Block[],
     );
-
     properties.setProperties(data.value?.data.properties ?? []);
     state.value.data = data.value?.data ?? ({} as Product);
-    handlePreviewProduct(state);
+    handlePreviewProduct(state, $i18n.locale.value);
     state.value.loading = false;
     return state.value.data;
   };
@@ -96,6 +100,12 @@ export const useProduct: UseProductReturn = (slug) => {
       ],
     });
   };
+  const { disableActions } = useEditor();
+  const { $isPreview } = useNuxtApp();
+
+  const productForEditor = computed(() =>
+    $isPreview && disableActions.value ? state.value.fakeData : state.value.data,
+  );
 
   return {
     setProductMeta,
@@ -103,5 +113,6 @@ export const useProduct: UseProductReturn = (slug) => {
     fetchProduct,
     ...toRefs(state.value),
     properties,
+    productForEditor,
   };
 };
