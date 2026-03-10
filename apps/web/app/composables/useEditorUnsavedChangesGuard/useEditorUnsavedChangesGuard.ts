@@ -1,23 +1,55 @@
-import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
+export interface UseEditorUnsavedChangesGuardOptions {
+  enabled?: boolean;
+  hasUnsavedChanges?: () => boolean;
+  onConfirmLeave?: () => void;
+}
 
-/**
- * Composable to handle navigation guard for unsaved changes in editor
- * Provides a reusable route leave guard that prompts users when they have unsaved edits
- */
-export const useEditorUnsavedChangesGuard = () => {
-  const { closeDrawer } = useSiteConfiguration();
+/** Guards against accidental navigation away from a page with unsaved editor changes */
+export const useEditorUnsavedChangesGuard = (options: UseEditorUnsavedChangesGuardOptions = {}) => {
+  const { enabled = true, hasUnsavedChanges: customHasUnsavedChanges, onConfirmLeave } = options;
+
+  if (!enabled) return;
+
   const { isEditingEnabled } = useEditor();
   const { settingsIsDirty } = useSiteSettings();
+  const { closeDrawer } = useSiteConfiguration();
+  const { resetFooterToSaved } = useBlockTemplates();
   const confirmMessage = getEditorUITranslation('unsaved-changes-confirm');
 
-  const hasUnsavedChanges = computed(() => isEditingEnabled.value || settingsIsDirty.value);
+  const hasUnsavedChanges = customHasUnsavedChanges || (() => isEditingEnabled.value || settingsIsDirty.value);
 
-  const guardRouteLeave = (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-    if (hasUnsavedChanges.value) {
+  const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+    if (!hasUnsavedChanges()) return;
+    event.preventDefault();
+  };
+
+  const handleConfirmLeave = async () => {
+    if (isEditingEnabled.value) {
+      await resetFooterToSaved();
+      isEditingEnabled.value = false;
+    }
+
+    if (onConfirmLeave) {
+      onConfirmLeave();
+    } else {
+      closeDrawer();
+    }
+  };
+
+  onMounted(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  });
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+  });
+
+  onBeforeRouteLeave(async (to, from, next) => {
+    if (hasUnsavedChanges()) {
       const confirmation = window.confirm(confirmMessage);
 
       if (confirmation) {
-        closeDrawer();
+        await handleConfirmLeave();
         next();
       } else {
         next(false);
@@ -25,10 +57,5 @@ export const useEditorUnsavedChangesGuard = () => {
     } else {
       next();
     }
-  };
-
-  return {
-    hasUnsavedChanges,
-    guardRouteLeave,
-  };
+  });
 };

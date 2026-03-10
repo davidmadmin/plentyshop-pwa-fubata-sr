@@ -1,22 +1,9 @@
 <template>
-  <EditableBlocks :blocks="footerBlocks" />
+  <EditableBlocks v-if="!$route.meta.isBlockified && footerBlock" :blocks="[footerBlock]" read-only />
 </template>
 
 <script setup lang="ts">
-import type { Block } from '@plentymarkets/shop-api';
-
-const { globalBlocksCache, updateGlobalBlocks } = useGlobalBlocks();
-
-const footerBlocks = computed({
-  get: () => {
-    const filtered = globalBlocksCache.value?.filter((block: Block) => block.name === 'Footer') ?? [];
-    return filtered;
-  },
-  set: (newFooterBlocks: Block[]) => {
-    if (!globalBlocksCache.value) return;
-
-    const otherBlocks = globalBlocksCache.value.filter((b: Block) => b.name !== 'Footer');
-    updateGlobalBlocks([...otherBlocks, ...newFooterBlocks]);
-  },
-});
+const nuxtApp = useNuxtApp();
+const { getFooterBlock } = useBlockTemplates('index', 'immutable', nuxtApp.$i18n.locale.value);
+const footerBlock = computed(() => getFooterBlock());
 </script>

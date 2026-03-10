@@ -1,8 +1,6 @@
 <template>
   <div>
-    <slot name="header">
-      <UiHeader />
-    </slot>
+    <UiHeader />
     <NarrowContainer v-if="breadcrumbs?.length" class="p-4 md:px-0">
       <LazyUiBreadcrumbs :breadcrumbs="breadcrumbs" />
     </NarrowContainer>
@@ -12,10 +10,8 @@
     <UiNavbarBottom v-if="viewport.isLessThan('lg')" />
     <Cookiebar />
     <PreviewMode />
+    <UiFooterBlocks />
     <QuickCheckout v-if="isOpen" :product="product" />
-    <slot name="footer">
-      <UiFooterBlocks />
-    </slot>
   </div>
 </template>
 

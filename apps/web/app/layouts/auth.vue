@@ -24,6 +24,5 @@
 defineProps<{
   heading: string;
 }>();
-
 const viewport = useViewport();
 </script>

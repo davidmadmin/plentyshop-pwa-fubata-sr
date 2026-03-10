@@ -1,10 +1,10 @@
 <template>
   <div>
-    <EmptyBlock v-if="isContentEmptyInEditor" />
-    <CategoryEmptyState v-else-if="isContentEmptyInLive" />
+    <EmptyBlock v-if="!readOnly && isContentEmptyInEditor" />
+    <CategoryEmptyState v-else-if="!readOnly && isContentEmptyInLive" />
     <draggable
-      v-if="blocksToRender.length"
-      v-model="blocksToRender"
+      v-if="data.length"
+      v-model="data"
       item-key="meta.uuid"
       handle=".drag-handle"
       class="content"
@@ -26,7 +26,6 @@
             :is-clicked="isClicked"
             :clicked-block-index="clickedBlockIndex"
             :is-tablet="isTablet"
-            :is-last-block="index === blocksToRender.length - 1"
             :change-block-position="changeBlockPosition"
             :root="getBlockDepth(block.meta.uuid) === 0"
             class="group"
@@ -41,7 +40,6 @@
 </template>
 
 <script lang="ts" setup>
-import type { Block } from '@plentymarkets/shop-api';
 import draggable from 'vuedraggable/src/vuedraggable';
 import type { DragEvent, EditableBlocksProps } from './types';
 
@@ -49,17 +47,35 @@ const NarrowContainer = resolveComponent('NarrowContainer');
 
 const { isInEditor, shouldShowEditorUI } = useEditorState();
 const props = withDefaults(defineProps<EditableBlocksProps>(), {
+  identifier: 'index',
+  type: 'immutable',
   hasEnabledActions: true,
+  preventBlocksRequest: false,
+  readOnly: false,
+  blocks: () => [],
 });
 
-const blocksToRender = computed({
-  get: () => toValue(props.blocks),
-  set: (value: Block[]) => ((props.blocks as Ref<Block[]>).value = value),
-});
+const {
+  data: templateData,
+  getBlocksServer,
+  isFooterBlock,
+} = useBlockTemplates(props.identifier.toString(), props.type.toString(), useNuxtApp().$i18n.locale.value);
 
-const isContentEmpty = computed(() => blocksToRender.value.length === 0);
-const isContentEmptyInEditor = computed(() => isContentEmpty.value);
-const isContentEmptyInLive = computed(() => isContentEmpty.value);
+const data = computed(() => (props.blocks && props.blocks.length > 0 ? props.blocks : templateData.value));
+
+const dataIsEmpty = computed(() => data.value.length === 0);
+
+const isContentEmptyInEditor = computed(
+  () => dataIsEmpty.value || (data.value.length === 1 && isFooterBlock(data.value[0]) && isInEditor.value),
+);
+
+const isContentEmptyInLive = computed(
+  () => dataIsEmpty.value || (data.value.length === 1 && isFooterBlock(data.value[0])),
+);
+
+if (!props.preventBlocksRequest && !props.readOnly && (!props.blocks || props.blocks.length === 0)) {
+  await getBlocksServer(props.identifier, props.type);
+}
 
 const {
   isClicked,
@@ -73,41 +89,53 @@ const {
 } = useBlockManager();
 
 const scrollToBlock = (evt: DragEvent) => {
-  if (!evt.moved) return;
+  const footerIndex = data.value.findIndex((block) => isFooterBlock(block));
+  const lastIndex = data.value.length - 1;
+  if (footerIndex !== -1 && footerIndex !== lastIndex) {
+    const footerBlock = data.value.splice(footerIndex, 1)[0];
+    if (footerBlock) {
+      data.value.push(footerBlock);
+    }
+  }
 
-  const { newIndex } = evt.moved;
-  const block = document.getElementById(`block-${newIndex}`);
-
-  if (block) nextTick(() => block.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  if (evt.moved) {
+    const { newIndex } = evt.moved;
+    const block = document.getElementById(`block-${newIndex}`);
+    if (block) {
+      nextTick(() => {
+        block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }
 };
 
-const { settingsIsDirty } = useSiteSettings();
-const { isEditingEnabled } = useEditor();
+const { closeDrawer } = useSiteConfiguration();
 const { drawerOpen: localizationDrawerOpen } = useEditorLocalizationKeys();
 const { shouldShowBlock, clearRegistry, isHydrationComplete } = useBlocksVisibility();
 
-const enabledActions = computed(() => {
-  const enabled = shouldShowEditorUI.value && props.hasEnabledActions && !localizationDrawerOpen.value;
-  return enabled;
+const enabledActions = computed(
+  () => !props.readOnly && shouldShowEditorUI.value && props.hasEnabledActions && !localizationDrawerOpen.value,
+);
+
+useEditorUnsavedChangesGuard({
+  enabled: !props.readOnly,
+  onConfirmLeave: () => closeDrawer(),
 });
 
 onMounted(async () => {
-  isEditingEnabled.value = false;
-  window.addEventListener('beforeunload', handleBeforeUnload);
+  if (!props.readOnly) {
+    const { isEditingEnabled } = useEditor();
+    isEditingEnabled.value = false;
+  }
 
-  if (isInEditor.value) await import('./draggable.css');
+  if (isInEditor.value && !props.readOnly) {
+    await import('./draggable.css');
+  }
 
   isHydrationComplete.value = true;
 });
 
 onBeforeUnmount(() => {
   clearRegistry();
-  window.removeEventListener('beforeunload', handleBeforeUnload);
 });
-
-const hasUnsavedChanges = () => isEditingEnabled.value || settingsIsDirty.value;
-const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-  if (!hasUnsavedChanges()) return;
-  event.preventDefault();
-};
 </script>

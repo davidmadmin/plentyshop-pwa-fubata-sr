@@ -7,5 +7,4 @@
   </main>
   <UiFooterBlocks />
 </template>
-
 <script setup lang="ts"></script>

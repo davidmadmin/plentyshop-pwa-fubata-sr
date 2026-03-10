@@ -1,11 +1,11 @@
 <template>
-  <div v-if="block.meta" :key="block.meta.uuid" :data-uuid="block.meta.uuid">
+  <div v-if="block.meta" :key="block.meta.uuid" :data-uuid="block.meta.uuid" class="h-full">
     <UiBlockPlaceholder v-if="displayTopPlaceholder(block.meta.uuid)" />
     <div
       :id="`block-${index}`"
       :ref="getLazyLoadRef(props.block.name, props.block.meta.uuid)"
       :class="[
-        'relative block-wrapper',
+        'relative block-wrapper h-full',
         {
           'outline outline-4 outline-[#538AEA]': showOutline && !isDragging,
         },
@@ -43,13 +43,12 @@
           ]"
           :index="index"
           :block="block"
-          :is-last-block="isLastBlock"
           :actions="getBlockActions(block)"
           @change-position="changeBlockPosition"
         />
       </ClientOnly>
 
-      <component :is="getBlockComponent" v-bind="contentProps" :index="index">
+      <component :is="getBlockComponent" v-if="getBlockComponent" v-bind="contentProps" :index="index">
         <template v-if="block.type === 'structure'" #content="slotProps">
           <PageBlock
             :index="index"
@@ -60,7 +59,6 @@
             :is-clicked="isClicked"
             :clicked-block-index="clickedBlockIndex"
             :is-tablet="isTablet"
-            :is-last-block="false"
             :change-block-position="changeBlockPosition"
             :column-length="slotProps.columnLength"
             :is-row-hovered="slotProps.isRowHovered"
@@ -109,7 +107,6 @@ import type { Block } from '@plentymarkets/shop-api';
 
 const props = withDefaults(defineProps<PageBlockProps>(), {
   enableActions: false,
-  isLastBlock: false,
 });
 
 const { isInEditorClient } = useEditorState();
@@ -251,8 +248,10 @@ const isEditDisabled = computed(() => {
   return route.fullPath !== homePath;
 });
 
+const { isFooterBlock } = useBlockTemplates();
+
 const getBlockActions = (block: Block) => {
-  if (block.name === 'Footer') {
+  if (isFooterBlock(block)) {
     return {
       isEditable: !isEditDisabled.value,
       isMovable: false,

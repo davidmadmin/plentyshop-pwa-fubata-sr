@@ -17,6 +17,10 @@ export interface DragEvent<T = Block> {
 }
 
 export type EditableBlocksProps = {
-  blocks: MaybeRefOrGetter<Block[]>;
+  identifier?: string | number;
+  type?: string;
   hasEnabledActions?: boolean;
+  preventBlocksRequest?: boolean;
+  readOnly?: boolean;
+  blocks?: Block[];
 };
