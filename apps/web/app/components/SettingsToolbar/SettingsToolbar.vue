@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="sticky top-[52px] h-[calc(100vh-150px)] bg-white z-[1] md:z-[10] lg:z-[150] mb-3 w-[54px] min-w-[54px] border-r"
+    class="h-[calc(100vh-150px)] bg-white z-[1] md:z-[10] lg:z-[150] mb-3 w-[54px] min-w-[54px] border-r"
     data-testid="edit-mode-side-toolbar"
   >
     <div class="relative flex flex-col px-1 py-1">
@@ -8,12 +8,12 @@
         <button
           type="button"
           class="editor-button relative py-2 flex justify-center"
-          :class="{ 'bg-editor-button text-white rounded-md': drawerView === 'PagesView' }"
+          :class="{ 'bg-editor-button text-white rounded-md': siteConfigurationDrawerView === 'PagesView' }"
           aria-label="Open pages drawer"
           data-testid="open-pages-drawer"
           @click="toggleDrawerView('PagesView')"
         >
-          <NuxtImg v-if="drawerView === 'PagesView'" width="24" height="24" :src="pagesWhite" />
+          <NuxtImg v-if="siteConfigurationDrawerView === 'PagesView'" width="24" height="24" :src="pagesWhite" />
           <NuxtImg v-else width="24" height="24" :src="pagesBlack" />
         </button>
       </SfTooltip>
@@ -21,7 +21,7 @@
         <button
           type="button"
           class="editor-button relative py-2 flex justify-center"
-          :class="{ 'bg-editor-button text-white rounded-md': drawerView === 'LocalizationView' }"
+          :class="{ 'bg-editor-button text-white rounded-md': siteConfigurationDrawerView === 'LocalizationView' }"
           aria-label="Open pages drawer"
           data-testid="open-pages-drawer"
           @click="toggleDrawerView('LocalizationView')"
@@ -29,22 +29,21 @@
           <SfIconLanguage width="24" height="24px" />
         </button>
       </SfTooltip>
-      <SfTooltip
-        v-if="enableTableOfContents"
-        :label="tableOfContentsLabel"
-        placement="right"
-        :show-arrow="true"
-        class="inline-grid font-editor"
-      >
+      <SfTooltip :label="tableOfContentsLabel" placement="right" :show-arrow="true" class="inline-grid font-editor">
         <button
           type="button"
           class="editor-button relative py-2 flex justify-center"
-          :class="{ 'bg-editor-button text-white rounded-md': drawerView === 'TableOfContents' }"
+          :class="{ 'bg-editor-button text-white rounded-md': siteConfigurationDrawerView === 'TableOfContents' }"
           aria-label="Open table of contents drawer"
           data-testid="open-table-of-contents-drawer"
           @click="toggleDrawerView('TableOfContents')"
         >
-          <NuxtImg v-if="drawerView === 'TableOfContents'" width="24" height="24" :src="tableOfContentsWhite" />
+          <NuxtImg
+            v-if="siteConfigurationDrawerView === 'TableOfContents'"
+            width="24"
+            height="24"
+            :src="tableOfContentsWhite"
+          />
           <NuxtImg v-else width="24" height="24" :src="tableOfContentsBlack" />
         </button>
       </SfTooltip>
@@ -66,22 +65,25 @@ import pagesBlack from '~/assets/icons/paths/pages-black.svg';
 import tableOfContentsWhite from '~/assets/icons/paths/table-of-contents-white.svg';
 import tableOfContentsBlack from '~/assets/icons/paths/table-of-contents-black.svg';
 
-const { drawerView, activeSetting, openDrawerWithView, closeDrawer, setActiveSetting } = useSiteConfiguration();
-const { drawerOpen: localizationDrawerOpen } = useEditorLocalizationKeys();
 const {
-  public: { enableTableOfContents },
-} = useRuntimeConfig();
+  siteConfigurationDrawerView,
+  activeSetting,
+  openDrawerWithView,
+  closeSiteConfigurationDrawer,
+  setActiveSetting,
+} = useSiteConfiguration();
+const { drawerOpen: localizationDrawerOpen } = useEditorLocalizationKeys();
 
 const pagesLabel = 'Page and category management: create, update, and organize your content.';
 const localizationLabel = 'Localization settings: manage languages, translations, and regional preferences.';
 const tableOfContentsLabel = 'Table of contents: view and navigate to all blocks on the current page.';
 
 function toggleDrawerView(view: DrawerView) {
-  if (drawerView.value === 'LocalizationView') {
+  if (siteConfigurationDrawerView.value === 'LocalizationView') {
     localizationDrawerOpen.value = false;
   }
-  if (drawerView.value === view) {
-    closeDrawer();
+  if (siteConfigurationDrawerView.value === view) {
+    closeSiteConfigurationDrawer();
   } else {
     openDrawerWithView(view);
   }

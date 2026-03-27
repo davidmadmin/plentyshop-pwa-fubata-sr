@@ -5,9 +5,6 @@ import { CookieBarObject } from '../../support/pageObjects/CookieBarObject';
 describe('Banner Slider Block Form', () => {
   const bannerSlider = new BannerSliderObject();
   const cookieBar = new CookieBarObject();
-  let firstBannerBlockUuid: string;
-  let secondBannerBlockUuid: string;
-
   const openSettingsForBannerSliderBlock = () => {
     cy.get('[data-testid="Carousel-open-editor-button"]').eq(0).should('exist').click();
 
@@ -34,37 +31,25 @@ describe('Banner Slider Block Form', () => {
     cy.intercept('plentysystems/getStorageMetadata', { statusCode: 200, body: {} }).as('getStorageMetadata');
 
     cy.clearCookies();
+    cy.clearConfig();
+    cy.setConfig({ isPreview: true });
     cy.visitAndHydrate(paths.home);
     cookieBar.acceptAll();
     openSettingsForBannerSliderBlock();
-
-    bannerSlider.getFirstBannerBlockUuid().then((uuid) => {
-      firstBannerBlockUuid = uuid;
-    });
-    bannerSlider.getSecondBannerBlockUuid().then((uuid) => {
-      secondBannerBlockUuid = uuid;
-    });
   });
 
   describe('Slide Settings', () => {
     it('should display the slide whose settings are open', () => {
-      bannerSlider.checkIsBannerImageVisible(firstBannerBlockUuid);
+      bannerSlider.checkIsBannerImageVisible(0);
       bannerSlider.openSlideOneSettings();
-      bannerSlider.checkIsBannerImageVisible(firstBannerBlockUuid);
+      bannerSlider.checkIsBannerImageVisible(0);
       bannerSlider.goBackToElementList();
       bannerSlider.openSlideTwoSettings();
-      bannerSlider.checkIsBannerImageVisible(secondBannerBlockUuid);
+      bannerSlider.checkIsBannerImageVisible(1);
     });
 
     it('should add a new slide via quick add', () => {
       bannerSlider.quickAddSlide();
-      bannerSlider.checkIsNewBannerImageVisible();
-      bannerSlider.openSlideOneSettings();
-    });
-
-    it('should add a new slide via the actions menu', () => {
-      bannerSlider.openSlideActions();
-      bannerSlider.addSlide();
       bannerSlider.checkIsNewBannerImageVisible();
       bannerSlider.openSlideOneSettings();
     });
@@ -88,7 +73,7 @@ describe('Banner Slider Block Form', () => {
       bannerSlider.openImageGroup();
       bannerSlider.openImageSelector('wideScreen');
       bannerSlider.selectImage();
-      bannerSlider.checkNewBannerImage(firstBannerBlockUuid);
+      bannerSlider.checkNewBannerImage();
     });
   });
 
@@ -98,7 +83,7 @@ describe('Banner Slider Block Form', () => {
       bannerSlider.closeImageGroup();
       bannerSlider.openTextGroup();
       bannerSlider.changeTexts();
-      bannerSlider.checkNewTexts(firstBannerBlockUuid);
+      bannerSlider.checkNewTexts();
     });
 
     it('should change the text box alignment x', () => {
@@ -106,9 +91,9 @@ describe('Banner Slider Block Form', () => {
       bannerSlider.closeImageGroup();
       bannerSlider.openTextGroup();
       bannerSlider.scrollFormDown();
-      bannerSlider.alignBoxCenterX(firstBannerBlockUuid);
-      bannerSlider.alignBoxBottomX(firstBannerBlockUuid);
-      bannerSlider.alignBoxTopX(firstBannerBlockUuid);
+      bannerSlider.alignBoxCenterX();
+      bannerSlider.alignBoxBottomX();
+      bannerSlider.alignBoxTopX();
     });
 
     it('should change the text box alignment y', () => {
@@ -116,9 +101,9 @@ describe('Banner Slider Block Form', () => {
       bannerSlider.closeImageGroup();
       bannerSlider.openTextGroup();
       bannerSlider.scrollFormDown();
-      bannerSlider.alignBoxCenterY(firstBannerBlockUuid);
-      bannerSlider.alignBoxRightY(firstBannerBlockUuid);
-      bannerSlider.alignBoxLeftY(firstBannerBlockUuid);
+      bannerSlider.alignBoxCenterY();
+      bannerSlider.alignBoxRightY();
+      bannerSlider.alignBoxLeftY();
     });
 
     it('should change the text alignment ', () => {
@@ -126,9 +111,9 @@ describe('Banner Slider Block Form', () => {
       bannerSlider.closeImageGroup();
       bannerSlider.openTextGroup();
       bannerSlider.scrollFormDown();
-      bannerSlider.textAlignCenter(firstBannerBlockUuid);
-      bannerSlider.textAlignRight(firstBannerBlockUuid);
-      bannerSlider.textAlignLeft(firstBannerBlockUuid);
+      bannerSlider.textAlignCenter();
+      bannerSlider.textAlignRight();
+      bannerSlider.textAlignLeft();
     });
   });
 
@@ -138,9 +123,9 @@ describe('Banner Slider Block Form', () => {
       bannerSlider.closeImageGroup();
       bannerSlider.closeTextGroup();
       bannerSlider.changeButtonLabelAndLink();
-      bannerSlider.checkButtonLabelAndLink(firstBannerBlockUuid);
-      bannerSlider.checkButtonSecondary(firstBannerBlockUuid);
-      bannerSlider.checkButtonPrimary(firstBannerBlockUuid);
+      bannerSlider.checkButtonLabelAndLink();
+      bannerSlider.checkButtonSecondary();
+      bannerSlider.checkButtonPrimary();
     });
   });
 });

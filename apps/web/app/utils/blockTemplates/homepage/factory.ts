@@ -2,6 +2,10 @@ import type { Block } from '@plentymarkets/shop-api';
 import { v4 as uuid } from 'uuid';
 import { createFooter } from '../footer/factory';
 
+export const BANNER_BLOCK_NAME = 'Banner';
+
+export const isBannerBlock = (block: Block | null | undefined) => block?.name === BANNER_BLOCK_NAME;
+
 export function createHomepage(): Block[] {
   const banner1Pretitle = t('defaultTemplate.homepage.carousel.banner1.pretitle');
   const banner1Title = t('defaultTemplate.homepage.carousel.banner1.title');
@@ -46,7 +50,7 @@ export function createHomepage(): Block[] {
       name: 'Carousel',
       type: 'structure',
       meta: {
-        uuid: '3e1f8c9a-d2b4-4f8d-9c2b-8e1f3a7d5c9b',
+        uuid: uuid(),
       },
       configuration: {
         controls: {
@@ -59,7 +63,7 @@ export function createHomepage(): Block[] {
           name: 'Banner',
           type: 'content',
           meta: {
-            uuid: 'a7b3c1d9-2e6f-4a5b-8c7d-1e2f3b4c5a6d',
+            uuid: uuid(),
             isGlobalTemplate: false,
           },
           content: {
@@ -94,7 +98,7 @@ export function createHomepage(): Block[] {
           name: 'Banner',
           type: 'content',
           meta: {
-            uuid: 'd4e1f2a3-b7c8-4d9e-8f1a-2b3c4d5e6f7a',
+            uuid: uuid(),
             isGlobalTemplate: false,
           },
           content: {
