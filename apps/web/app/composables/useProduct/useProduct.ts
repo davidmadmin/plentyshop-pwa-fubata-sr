@@ -4,9 +4,6 @@ import { toRefs } from '@vueuse/shared';
 import type { UseProductReturn, UseProductState, FetchProduct } from '~/composables/useProduct/types';
 
 import { generateBreadcrumbs } from '~/utils/productHelper';
-import { getProductTemplate } from '~/utils/blockTemplates/product';
-
-const useProductTemplateData = async (locale: string) => await getProductTemplate(locale);
 
 /**
  * @description Composable managing product data
@@ -54,36 +51,16 @@ export const useProduct: UseProductReturn = (slug) => {
    */
 
   const fetchProduct: FetchProduct = async (params: ProductParams) => {
-    const route = useRoute();
     const { $i18n } = useNuxtApp();
     const { isInEditor } = useEditorState();
-    const {
-      data: blockData,
-      setupBlocks,
-      getBlocksServer,
-      isFooterBlock,
-    } = useBlockTemplates(
-      route?.meta?.identifier as string,
-      route.meta.type as string,
-      useNuxtApp().$i18n.locale.value,
-    );
-
     state.value.loading = true;
 
     if (isGlobalProductDetailsTemplate.value && isInEditor.value) {
       const fakeProduct = $i18n.locale.value === 'en' ? fakeProductEN : fakeProductDE;
 
-      await getBlocksServer(route.meta.identifier as string, route.meta.type as string);
-
-      const hasContentBlocks = blockData.value?.some((block) => !isFooterBlock(block));
-      const blocks = hasContentBlocks ? blockData.value : await useProductTemplateData($i18n.locale.value);
-
       state.value.data = {
-        blocks: blocks,
         ...fakeProduct,
       };
-
-      setupBlocks(blocks);
 
       handlePreviewProduct(state, $i18n.locale.value, false);
 
@@ -97,12 +74,7 @@ export const useProduct: UseProductReturn = (slug) => {
     );
     useHandleError(error.value ?? null);
 
-    const fetchedBlocks = data.value?.data.blocks;
-    setupBlocks(
-      fetchedBlocks && fetchedBlocks.length > 0 ? fetchedBlocks : await useProductTemplateData($i18n.locale.value),
-    );
-
-    properties.setProperties(data.value?.data.properties ?? []);
+    properties.setProperties(data.value?.data?.properties ?? []);
     state.value.data = data.value?.data ?? ({} as Product);
     handlePreviewProduct(state, $i18n.locale.value, true);
     state.value.loading = false;
@@ -114,9 +86,7 @@ export const useProduct: UseProductReturn = (slug) => {
    * @example setBreadcrumbs()
    */
   const setBreadcrumbs = () => {
-    const { data: categoryTree } = useCategoryTree();
-
-    state.value.breadcrumbs = generateBreadcrumbs(categoryTree.value, state.value.data, t('common.labels.home'));
+    state.value.breadcrumbs = generateBreadcrumbs(state.value.data, t('common.labels.home'));
   };
 
   /**

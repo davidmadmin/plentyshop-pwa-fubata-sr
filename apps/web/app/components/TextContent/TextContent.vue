@@ -6,48 +6,13 @@
     :class="['space-y-4', textAlignmentClass]"
   >
     <div
-      v-if="config.enableRichTextEditorV2 && props.text?.htmlDescription"
+      v-if="props.text?.htmlDescription"
       class="rte-prose rte-prose--render"
+      :data-testid="props.testId ? 'text-html-' + props.testId : 'text-html'"
       :class="`rte-prose--${props.text?.textAlignment ?? 'left'}`"
+      @click="handleRteClick"
       v-html="renderedHtmlDescription"
     />
-
-    <template v-else>
-      <div
-        v-if="props.text?.pretitle"
-        :data-testid="props.testId ? 'text-pretitle-' + props.testId : 'text-pretitle'"
-        class="text-xl font-bold mb-2"
-        v-html="renderedPretitle"
-      />
-
-      <h1
-        v-if="props.text?.title && props.index === 0"
-        :data-testid="props.testId ? 'text-title-' + props.testId : 'text-title'"
-        class="typography-display-3 md:typography-display-2 lg:typography-display-1 font-bold my-2 lg:leading-[4rem]"
-        v-html="renderedTitle"
-      />
-
-      <h2
-        v-else-if="props.text?.title"
-        :data-testid="props.testId ? 'text-title-' + props.testId : 'text-title'"
-        class="text-2xl font-semibold mb-4"
-        v-html="renderedTitle"
-      />
-
-      <div
-        v-if="props.text?.subtitle"
-        :data-testid="props.testId ? 'text-subtitle-' + props.testId : 'text-subtitle'"
-        class="text-lg font-semibold"
-        v-html="renderedSubtitle"
-      />
-
-      <div
-        v-if="props.text?.htmlDescription"
-        :data-testid="props.testId ? 'text-html-' + props.testId : 'text-html'"
-        class="text-base"
-        v-html="renderedHtmlDescription"
-      />
-    </template>
 
     <UiButton
       v-if="props.button?.label && props.button?.link"
@@ -66,11 +31,39 @@
 import type { TextContentProps } from '~/components/TextContent/types';
 
 const props = defineProps<TextContentProps>();
+const localePath = useLocalePath();
+const router = useRouter();
+const NuxtLink = resolveComponent('NuxtLink');
 
-const renderedHtmlDescription = computed(() => decodeHtmlEntities(props.text?.htmlDescription));
-const renderedPretitle = computed(() => decodeHtmlEntities(props.text?.pretitle));
-const renderedTitle = computed(() => decodeHtmlEntities(props.text?.title));
-const renderedSubtitle = computed(() => decodeHtmlEntities(props.text?.subtitle));
+const renderedHtmlDescription = computed(() => {
+  const html = decodeHtmlEntities(props.text?.htmlDescription);
+  if (!html) return '';
+
+  return html.replace(/<a\b([^>]*?)href=(["'])([^"']*?)\2/gi, (match, before, quote, href) => {
+    if (isInternalLink(href, router)) {
+      return `<a${before}href=${quote}${localePath(href)}${quote}`;
+    }
+    return match;
+  });
+});
+
+const handleRteClick = (event: MouseEvent) => {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    return;
+
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+
+  const anchor = target.closest('a') as HTMLAnchorElement | null;
+  if (!anchor) return;
+
+  const href = anchor.getAttribute('href');
+  if (!href || !isInternalLink(href, router)) return;
+  if (anchor.target && anchor.target !== '_self') return;
+
+  event.preventDefault();
+  router.push(href);
+};
 
 const textAlignmentClass = computed(() => {
   switch (props.text?.textAlignment) {
@@ -82,8 +75,4 @@ const textAlignmentClass = computed(() => {
       return 'text-left items-start';
   }
 });
-const config = useRuntimeConfig().public;
-
-const localePath = useLocalePath();
-const NuxtLink = resolveComponent('NuxtLink');
 </script>

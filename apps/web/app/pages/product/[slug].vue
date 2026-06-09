@@ -7,9 +7,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Product } from '@plentymarkets/shop-api';
+import type { Product, ApiError } from '@plentymarkets/shop-api';
 import type { WatchStopHandle } from 'vue';
-import { productGetters, categoryTreeGetters } from '@plentymarkets/shop-api';
+import { productGetters } from '@plentymarkets/shop-api';
 import type { Locale } from '#i18n';
 
 defineI18nRoute({
@@ -26,7 +26,6 @@ const { productForEditor, fetchProduct, setProductMeta, setBreadcrumbs, breadcru
 const product = productForEditor;
 const { disableActions } = useEditor();
 const { fetchProductReviews, fetchProductAuthenticatedReviews } = useProductReviews(Number(productId));
-const { data: categoryTree } = useCategoryTree();
 const { open } = useProductLegalDetailsDrawer();
 const { setPageMeta } = usePageMeta();
 const { resetNotification } = useEditModeNotification(disableActions);
@@ -43,6 +42,7 @@ definePageMeta({
   type: 'product',
   isBlockified: true,
   identifier: 0,
+  cacheControl: getCacheControl(),
 });
 
 const showRecommended = ref(false);
@@ -108,12 +108,10 @@ watch(
 );
 
 watch(
-  () => categoryTree.value,
-  (categoriesTree) => {
+  () => product.value,
+  () => {
     setProductCanonicalMetaData(product.value);
-    const productCategoryId = productGetters.getCategoryId(product.value);
-    const category = categoryTreeGetters.findCategoryById(categoriesTree, productCategoryId) || undefined;
-    setProductMetaData(product.value, category);
+    setProductMetaData(product.value);
     setProductRobotsMetaData(product.value);
   },
   { immediate: true },
@@ -131,7 +129,7 @@ watch(
 
 const observeRecommendedSection = () => {
   if (import.meta.client && recommendedSection.value) {
-    const observer = new window.IntersectionObserver(
+    const observer = new globalThis.IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         if (entry?.isIntersecting) {
@@ -148,6 +146,20 @@ const observeRecommendedSection = () => {
   }
 };
 
+async function handleVariationChange() {
+  if (Number(productParams.variationId) !== variationId.value && variationId.value > 0) {
+    try {
+      productParams.variationId = variationId.value;
+      await fetchProduct(productParams);
+      setCurrentProduct(productForEditor.value || ({} as Product));
+      await fetchReviews();
+      setProductMetaData(product.value);
+    } catch (error) {
+      useHandleError(error as ApiError);
+    }
+  }
+}
+
 onBeforeRouteLeave(() => {
   resetNotification();
   if (variationWatchHandler) {
@@ -158,14 +170,8 @@ onBeforeRouteLeave(() => {
 onNuxtReady(() => {
   observeRecommendedSection();
 
-  if (import.meta.client && useCallisto().isEnabled) {
-    variationWatchHandler = watch(variationId, async () => {
-      if (Number(productParams.variationId) !== variationId.value && variationId.value > 0) {
-        productParams.variationId = variationId.value;
-        await fetchProduct(productParams);
-        setCurrentProduct(productForEditor.value || ({} as Product));
-      }
-    });
+  if (useCallisto().isEnabled) {
+    variationWatchHandler = watch(variationId, handleVariationChange);
   }
 });
 </script>

@@ -1,14 +1,9 @@
 <template>
-  <UiAccordionItem
+  <EditorFormPanel
     v-model="imageGroupOpen"
-    summary-active-class="bg-neutral-100 border-t-0"
-    summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
+    :title="getEditorTranslation('images-group-label')"
     data-testid="image-group"
   >
-    <template #summary>
-      <h2>{{ getEditorTranslation('images-group-label') }}</h2>
-    </template>
-
     <div class="images">
       <UiImagePicker
         v-for="type in imageTypes"
@@ -69,43 +64,16 @@
       </div>
     </div>
 
-    <fieldset class="py-2">
-      <div class="flex items-center gap-2">
-        <legend class="text-sm font-medium text-black m-0">
-          {{ getEditorTranslation('image-scalling-label') }}
-        </legend>
-        <SfTooltip :label="fillTooltip" placement="top">
-          <SfIconInfo size="sm" />
-        </SfTooltip>
-      </div>
-      <div class="w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden mt-2">
-        <div
-          data-testid="align-y-center"
-          class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm border-r"
-          :class="{ 'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.image.fillMode === 'fill' }"
-          @click="uiImageTextBlock.image.fillMode = 'fill'"
-        >
-          <SfIconCheck
-            :class="{ invisible: uiImageTextBlock.image.fillMode !== 'fill' }"
-            class="w-[1.1rem] shrink-0 mr-1"
-          />
-          {{ getEditorTranslation('image-scalling-fill-label') }}
-        </div>
-
-        <div
-          data-testid="align-y-top"
-          class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm border-r"
-          :class="{ 'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.image.fillMode === 'fit' }"
-          @click="uiImageTextBlock.image.fillMode = 'fit'"
-        >
-          <SfIconCheck
-            :class="{ invisible: uiImageTextBlock.image.fillMode !== 'fit' }"
-            class="w-[1.1rem] shrink-0 mr-1"
-          />
-          {{ getEditorTranslation('image-scalling-fit-label') }}
-        </div>
-      </div>
-    </fieldset>
+    <div class="py-2">
+      <EditorOptionsTabs
+        v-model="fillModeModel"
+        :legend="getEditorTranslation('image-scalling-label')"
+        :tooltip="fillTooltip"
+        tooltip-placement="top"
+        test-id-prefix="image-scaling"
+        :options="fillModeOptions"
+      />
+    </div>
     <div class="py-2">
       <div class="flex justify-between mb-2">
         <UiFormLabel>{{ getEditorTranslation('linktarget-label') }}</UiFormLabel>
@@ -120,168 +88,30 @@
         </SfInput>
       </label>
     </div>
-  </UiAccordionItem>
-  <UiAccordionItem
-    v-model="textGroupOpen"
-    summary-active-class="bg-neutral-100 border-t-0"
-    summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
-    data-testid="text-group"
-  >
-    <template #summary>
-      <h2>{{ getEditorTranslation('text-overlay-label') }}</h2>
-    </template>
-
+  </EditorFormPanel>
+  <EditorFormPanel v-model="textGroupOpen" :title="getEditorTranslation('text-overlay-label')" data-testid="text-group">
     <EditorRichTextEditorForm
       :model-value="uiImageTextBlock.text.textOverlay ?? ''"
       :text-align="uiImageTextBlock.text.textOverlayAlignX"
       :block-uuid="blockUuid"
       @update:model-value="uiImageTextBlock.text.textOverlay = $event"
-    >
-      <div class="py-2">
-        <UiFormLabel>{{ getEditorTranslation('text-overlay-label') }}</UiFormLabel>
-        <SfTextarea
-          id="text-overlay"
-          v-model="uiImageTextBlock.text.textOverlay"
-          data-testid="text-overlay"
-          name="text-overlay"
-          rows="3"
-          class="min-h-[232px] mt-1 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm"
-          :placeholder="getEditorTranslation('text-overlay-placeholder')"
-        />
-      </div>
+    />
 
-      <div class="py-2">
-        <div class="flex justify-between mb-2">
-          <UiFormLabel>{{ getEditorTranslation('text-overlay-color-label') }}</UiFormLabel>
-        </div>
-        <EditorColorPicker v-model="uiImageTextBlock.text.textOverlayColor" class="w-full">
-          <template #trigger="{ color, toggle }">
-            <label>
-              <SfInput
-                v-model="uiImageTextBlock.text.textOverlayColor"
-                type="text"
-                data-testid="text-overlay-color-input"
-              >
-                <template #suffix>
-                  <button
-                    type="button"
-                    class="border border-[#a0a0a0] rounded-lg cursor-pointer w-10 h-8"
-                    :style="{ backgroundColor: color }"
-                    @mousedown.stop
-                    @click.stop="toggle"
-                  />
-                </template>
-              </SfInput>
-            </label>
-          </template>
-        </EditorColorPicker>
-      </div>
+    <div class="py-2">
+      <EditorOptionsTabs
+        v-model="textOverlayAlignYModel"
+        :legend="getEditorTranslation('text-overlay-align-y-label')"
+        test-id-prefix="text-overlay-align-y"
+        :options="textOverlayAlignYOptions"
+      />
+    </div>
+  </EditorFormPanel>
 
-      <fieldset class="py-2">
-        <legend class="text-sm font-medium text-black">
-          {{ getEditorTranslation('text-overlay-align-x-label') }}
-        </legend>
-
-        <div class="w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden mt-2">
-          <div
-            data-testid="align-x-left"
-            class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm border-r"
-            :class="{ 'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.text.textOverlayAlignX === 'left' }"
-            @click="uiImageTextBlock.text.textOverlayAlignX = 'left'"
-          >
-            <SfIconCheck
-              :class="{ invisible: uiImageTextBlock.text.textOverlayAlignX !== 'left' }"
-              class="w-[1.1rem] shrink-0 mr-1"
-            />
-            {{ getEditorTranslation('text-overlay-align-x-left') }}
-          </div>
-
-          <div
-            data-testid="align-x-center"
-            class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm border-r"
-            :class="{ 'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.text.textOverlayAlignX === 'center' }"
-            @click="uiImageTextBlock.text.textOverlayAlignX = 'center'"
-          >
-            <SfIconCheck
-              :class="{ invisible: uiImageTextBlock.text.textOverlayAlignX !== 'center' }"
-              class="w-[1.1rem] shrink-0 mr-1"
-            />
-            {{ getEditorTranslation('text-overlay-align-x-center') }}
-          </div>
-
-          <div
-            data-testid="align-x-right"
-            class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm"
-            :class="{ 'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.text.textOverlayAlignX === 'right' }"
-            @click="uiImageTextBlock.text.textOverlayAlignX = 'right'"
-          >
-            <SfIconCheck
-              :class="{ invisible: uiImageTextBlock.text.textOverlayAlignX !== 'right' }"
-              class="w-[1.1rem] shrink-0 mr-1"
-            />
-            {{ getEditorTranslation('text-overlay-align-x-right') }}
-          </div>
-        </div>
-      </fieldset>
-    </EditorRichTextEditorForm>
-
-    <fieldset class="py-2">
-      <legend class="text-sm font-medium text-black">
-        {{ getEditorTranslation('text-overlay-align-y-label') }}
-      </legend>
-
-      <div class="w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden mt-2">
-        <div
-          data-testid="align-y-top"
-          class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm border-r"
-          :class="{ 'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.text.textOverlayAlignY === 'top' }"
-          @click="uiImageTextBlock.text.textOverlayAlignY = 'top'"
-        >
-          <SfIconCheck
-            :class="{ invisible: uiImageTextBlock.text.textOverlayAlignY !== 'top' }"
-            class="w-[1.1rem] shrink-0 mr-1"
-          />
-          {{ getEditorTranslation('text-overlay-align-y-top') }}
-        </div>
-
-        <div
-          data-testid="align-y-center"
-          class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm border-r"
-          :class="{ 'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.text.textOverlayAlignY === 'center' }"
-          @click="uiImageTextBlock.text.textOverlayAlignY = 'center'"
-        >
-          <SfIconCheck
-            :class="{ invisible: uiImageTextBlock.text.textOverlayAlignY !== 'center' }"
-            class="w-[1.1rem] shrink-0 mr-1"
-          />
-          {{ getEditorTranslation('text-overlay-align-x-center') }}
-        </div>
-
-        <div
-          data-testid="align-y-bottom"
-          class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm"
-          :class="{ 'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.text.textOverlayAlignY === 'bottom' }"
-          @click="uiImageTextBlock.text.textOverlayAlignY = 'bottom'"
-        >
-          <SfIconCheck
-            :class="{ invisible: uiImageTextBlock.text.textOverlayAlignY !== 'bottom' }"
-            class="w-[1.1rem] shrink-0 mr-1"
-          />
-          {{ getEditorTranslation('text-overlay-align-y-bottom') }}
-        </div>
-      </div>
-    </fieldset>
-  </UiAccordionItem>
-
-  <UiAccordionItem
+  <EditorFormPanel
     v-model="buttonOpen"
-    summary-active-class="bg-neutral-100"
-    summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
+    :title="getEditorTranslation('button-group-label')"
+    data-testid="slider-button-group-title"
   >
-    <template #summary>
-      <h2 data-testid="slider-button-group-title">{{ getEditorTranslation('button-group-label') }}</h2>
-    </template>
-
     <div class="images">
       <div class="mb-6 mt-4">
         <label>
@@ -306,50 +136,20 @@
         />
       </div>
       <div class="mb-6">
-        <UiFormLabel class="mb-1">{{ getEditorTranslation('button-variant-label') }}</UiFormLabel>
-        <div class="mt-2 w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden">
-          <div
-            class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-            :class="{
-              'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.button.variant === 'primary',
-            }"
-            data-testid="slider-button-primary"
-            @click="uiImageTextBlock.button.variant = 'primary'"
-          >
-            <SfIconCheck
-              class="mr-1 w-[1.1rem]"
-              :class="{ invisible: uiImageTextBlock.button.variant !== 'primary' }"
-            />
-            {{ getEditorTranslation('button-variant-primary-label') }}
-          </div>
-
-          <div
-            class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-            :class="{
-              'bg-gray-100 text-gray-900 font-semibold': uiImageTextBlock.button.variant === 'secondary',
-            }"
-            data-testid="slider-button-secondary"
-            @click="uiImageTextBlock.button.variant = 'secondary'"
-          >
-            <SfIconCheck
-              class="mr-1 w-[1.1rem]"
-              :class="{ invisible: uiImageTextBlock.button.variant !== 'secondary' }"
-            />
-            {{ getEditorTranslation('button-variant-secondary-label') }}
-          </div>
-        </div>
+        <EditorOptionsTabs
+          v-model="buttonVariantModel"
+          :legend="getEditorTranslation('button-variant-label')"
+          test-id-prefix="slider-button-variant"
+          :options="buttonVariantOptions"
+        />
       </div>
     </div>
-  </UiAccordionItem>
-  <UiAccordionItem
+  </EditorFormPanel>
+  <EditorFormPanel
     v-model="layoutOpen"
-    summary-active-class="bg-neutral-100"
-    summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
+    :title="getEditorTranslation('layout-label')"
+    data-testid="slider-button-group-title"
   >
-    <template #summary>
-      <h2 data-testid="slider-button-group-title">{{ getEditorTranslation('layout-label') }}</h2>
-    </template>
-
     <div class="py-2 flex items-center justify-between gap-3">
       <UiFormLabel for="keep-transparent" class="m-0">
         {{ getEditorTranslation('keep-transparent-label') }}
@@ -444,14 +244,12 @@
         </div>
       </div>
     </div>
-  </UiAccordionItem>
+  </EditorFormPanel>
 </template>
 
 <script setup lang="ts">
 import {
   SfInput,
-  SfIconCheck,
-  SfTextarea,
   SfIconArrowBack,
   SfIconArrowUpward,
   SfIconArrowDownward,
@@ -461,18 +259,14 @@ import {
   SfIconInfo,
 } from '@storefront-ui/vue';
 
-import type { ImageFormProps } from './types';
+import type { ImageFormProps, ImageTypeKey } from './types';
 import type { ImageContent } from '~/components/blocks/Image/types';
 import { migrateImageContent } from '~/utils/migrate-image-content';
 import { clamp } from '@storefront-ui/shared';
 
 const { placeholderImg, labels, imageDimensions, imageTypes, deleteImage } = usePickerHelper();
-const route = useRoute();
-const { data } = useBlockTemplates(
-  route?.meta?.identifier as string,
-  route.meta.type as string,
-  useNuxtApp().$i18n.locale.value,
-);
+const { allBlocks: data } = useBlocks();
+
 const { blockUuid } = useSiteConfiguration();
 const { findOrDeleteBlockByUuid } = useBlockManager();
 
@@ -484,6 +278,15 @@ const DEFAULT_LAYOUT = {
   paddingLeft: 0,
   paddingRight: 0,
 };
+
+const {
+  fillModeModel,
+  fillModeOptions,
+  textOverlayAlignYModel,
+  textOverlayAlignYOptions,
+  buttonVariantModel,
+  buttonVariantOptions,
+} = useEditorOptionsTabs(() => uiImageTextBlock.value, getEditorTranslation);
 
 const uiImageTextBlock = computed(() => {
   const rawContent = findOrDeleteBlockByUuid(data.value, props.uuid || blockUuid.value)?.content || {};
@@ -511,28 +314,24 @@ watch([isTransparent, backgroundColor], () => {
   uiImageTextBlock.value.layout.backgroundColor = isTransparent.value ? 'transparent' : backgroundColor.value;
 });
 
-watch(
-  () => uiImageTextBlock.value.image.fillMode,
-  (newMode) => {
-    if (newMode === 'fill') {
-      uiImageTextBlock.value.layout.paddingTop = 0;
-      uiImageTextBlock.value.layout.paddingBottom = 0;
-      uiImageTextBlock.value.layout.paddingLeft = 0;
-      uiImageTextBlock.value.layout.paddingRight = 0;
-    }
-  },
-);
+watch(fillModeModel, (newMode) => {
+  if (newMode === 'fill') {
+    uiImageTextBlock.value.layout.paddingTop = 0;
+    uiImageTextBlock.value.layout.paddingBottom = 0;
+    uiImageTextBlock.value.layout.paddingLeft = 0;
+    uiImageTextBlock.value.layout.paddingRight = 0;
+  }
+});
 
-const imageGroupOpen = ref(false);
-const textGroupOpen = ref(false);
-const buttonOpen = ref(false);
-const layoutOpen = ref(false);
+const imageGroupOpen = ref(true);
+const textGroupOpen = ref(true);
+const buttonOpen = ref(true);
+const layoutOpen = ref(true);
 
 const fillTooltip =
   'Fit: The image maintains its original aspect ratio and fits inside the available space, allowing padding. Fill: The image completely fills the available space, potentially cropping parts of the image, and ignores padding.';
 
 const paddingTooltip = 'Padding is only available in Fit mode.';
-type ImageTypeKey = 'wideScreen' | 'desktop' | 'tablet' | 'mobile';
 
 const handleImageAddWrapper = ({ image, type }: { image: string; type: string }) => {
   if (uiImageTextBlock.value.image && ['wideScreen', 'desktop', 'tablet', 'mobile'].includes(type)) {
@@ -554,18 +353,6 @@ const clampBrightness = (event: Event, type: string) => {
   "en": {
     "images-group-label": "Images",
 
-    "image-xl-label": "Image XL (Desktop)",
-    "image-xl-hint": "Recommended dimensions: 1920 × 1080 px",
-
-    "image-l-label": "Image L (Desktop)",
-    "image-l-hint": "Recommended dimensions: 1024 × 576 px",
-
-    "image-m-label": "Image M (Laptop)",
-    "image-m-hint": "Recommended dimensions: 768 × 432 px",
-
-    "image-s-label": "Image S (Mobile)",
-    "image-s-hint": "Recommended dimensions: 320 × 320 px",
-
     "image-scalling-label": "Image Scaling",
     "image-scalling-fit-label": "Fit",
     "image-scalling-fill-label": "Fill",
@@ -575,17 +362,9 @@ const clampBrightness = (event: Event, type: string) => {
     "alt-label": "Alt",
     "linktarget-label": "Link-Target",
     "padding-label": "Padding",
-    "image-align-option-left-label": "Left",
-    "image-align-option-right-label": "Right",
 
     "text-overlay-label": "Text",
-    "text-overlay-placeholder": "Text that supports HTML formatting",
-    "text-overlay-color-label": "Text Color",
 
-    "text-overlay-align-x-label": "Horizontal Alignment (x)",
-    "text-overlay-align-x-left": "Left",
-    "text-overlay-align-x-center": "Center",
-    "text-overlay-align-x-right": "Right",
     "background-color-label": "Background Color",
 
     "keep-transparent-label": "Keep background transparent",
@@ -606,19 +385,7 @@ const clampBrightness = (event: Event, type: string) => {
   "de": {
     "images-group-label": "Images",
 
-    "image-xl-label": "Image XL (Desktop)",
-    "image-xl-hint": "Recommended dimensions: 1920 × 1080 px",
-
-    "image-l-label": "Image L (Desktop)",
-    "image-l-hint": "Recommended dimensions: 1024 × 576 px",
-
-    "image-m-label": "Image M (Laptop)",
-    "image-m-hint": "Recommended dimensions: 768 × 432 px",
-
-    "image-s-label": "Image S (Mobile)",
-    "image-s-hint": "Recommended dimensions: 320 × 320 px",
-
-    "image-scaling-label": "Image Scaling",
+    "image-scalling-label": "Image Scaling",
     "image-scalling-fit-label": "Fit",
     "image-scalling-fill-label": "Fill",
     "background-color-label": "Background Color",
@@ -628,21 +395,14 @@ const clampBrightness = (event: Event, type: string) => {
     "alt-label": "Alt",
     "linktarget-label": "Link-Target",
     "padding-label": "Padding",
-    "image-align-option-left-label": "Left",
-    "image-align-option-right-label": "Right",
     "keep-transparent-label": "Keep background transparent",
 
     "text-overlay-label": "Text",
-    "text-overlay-placeholder": "Enter text (HTML allowed)",
-    "text-overlay-color-label": "Text Color",
-    "text-overlay-align-x-label": "Horizontal Alignment (x)",
-    "text-overlay-align-x-left": "Left",
-    "text-overlay-align-x-center": "Center",
-    "text-overlay-align-x-right": "Right",
 
     "text-overlay-align-y-label": "Vertical Alignment (y)",
     "text-overlay-align-y-top": "Top",
     "text-overlay-align-y-center": "Center",
+    "text-overlay-align-y-bottom": "Bottom",
     "button-group-label": "Button",
     "button-text-label": "Label",
     "button-text-placeholder": "Button",

@@ -13,6 +13,7 @@ export const ProductFixture: Product = {
       updatedAt: '2024-01-01T00:00:00+02:00',
       manually: true,
       plentyId: 60796,
+      name: 'Category',
     },
   ],
   filter: {
@@ -181,6 +182,7 @@ export const ProductFixture: Product = {
       },
     ],
   },
+  breadcrumbs: [{ id: 1, level: 1, name: 'Gear', url: '/gear' }],
 };
 
 export default ProductFixture;

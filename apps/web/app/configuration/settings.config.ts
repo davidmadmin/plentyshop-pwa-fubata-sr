@@ -17,7 +17,7 @@ export default {
   passwordMinLength: Number(process.env.PASSWORD_MIN_LENGTH ?? 8),
   passwordMaxLength: Number(process.env.PASSWORD_MAX_LENGTH ?? 64),
   robots: process.env.NUXT_PUBLIC_ROBOTS || 'all',
-  contactShopEmail: process.env.NUXT_PUBLIC_CONTACT_SHOP_EMAIL || 'your@email.com',
+  contactShopEmail: process.env.NUXT_PUBLIC_CONTACT_SHOP_EMAIL,
   robotsHomePage: process.env.NUXT_PUBLIC_ROBOTS_HOME_PAGE || 'all',
   robotsContactPage: process.env.NUXT_PUBLIC_ROBOTS_CONTACT_PAGE || 'all',
   robotsCancellationRights: process.env.NUXT_PUBLIC_ROBOTS_CANCELLATION_RIGHTS || 'all',
@@ -121,4 +121,5 @@ export default {
   manufacturerContactUrl: process.env.NUXT_PUBLIC_MANUFACTURER_CONTACT_URL || '0',
   customAssetsSafeMode: process.env.NUXT_PUBLIC_CUSTOM_ASSETS_SAFE_MODE === 'true',
   enableSingleProductUrlScheme: process.env.NUXT_PUBLIC_ENABLE_SINGLE_PRODUCT_URL_SCHEME === 'true',
+  enableOrderChangePaymentMethod: process.env.NUXT_PUBLIC_ENABLE_ORDER_CHANGE_PAYMENT_METHOD !== 'false',
 };

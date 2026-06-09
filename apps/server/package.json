@@ -18,8 +18,8 @@
     "dotenv": "^16.6.1"
   },
   "devDependencies": {
-    "eslint": "^9.39.2",
-    "nodemon": "^3.1.11",
+    "eslint": "^9.39.4",
+    "nodemon": "^3.1.14",
     "ts-node-dev": "^2.0.0",
     "tsup": "^8.5.1"
   }

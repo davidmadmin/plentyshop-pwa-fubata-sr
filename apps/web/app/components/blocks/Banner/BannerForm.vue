@@ -1,16 +1,11 @@
 <template>
   <div class="block-slider-edit">
     <div :data-testid="`slide-settings-${activeSlide}`">
-      <UiAccordionItem
+      <EditorFormPanel
         v-model="imagesOpen"
-        summary-active-class="bg-neutral-100"
-        summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
-        data-testid="slider-image-group"
+        :title="getEditorTranslation('images-group-label')"
+        data-testid="slider-image-group-title"
       >
-        <template #summary>
-          <h2 data-testid="slider-image-group-title">{{ getEditorTranslation('images-group-label') }}</h2>
-        </template>
-
         <div class="images">
           <UiImagePicker
             v-for="type in imageTypes"
@@ -61,139 +56,19 @@
           <SfInput v-model="banner.content.image.alt" name="alt" type="text" data-testid="slide-alt-text" />
           <div class="typography-text-xs text-gray-500 flex gap-1 mt-2 sm:mb-0">Alternative image text</div>
         </div>
-      </UiAccordionItem>
+      </EditorFormPanel>
 
-      <UiAccordionItem
+      <EditorFormPanel
         v-model="textOpen"
-        summary-active-class="bg-neutral-100"
-        summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
-        data-testid="banner-text-group"
+        :title="getEditorTranslation('text-group-label')"
+        data-testid="slider-text-group-title"
       >
-        <template #summary>
-          <h2 data-testid="slider-text-group-title">{{ getEditorTranslation('text-group-label') }}</h2>
-        </template>
-
         <div>
           <EditorRichTextEditorForm
             :model-value="banner.content.text.htmlDescription ?? ''"
             :text-align="banner.content.text.textAlignment"
             @update:model-value="banner.content.text.htmlDescription = $event"
-          >
-            <div class="mb-6">
-              <UiFormLabel class="mb-1">{{ getEditorTranslation('pretitle-label') }}</UiFormLabel>
-              <SfInput
-                v-model="banner.content.text.pretitle"
-                name="preTitle"
-                type="text"
-                :placeholder="getEditorTranslation('pretitle-placeholder')"
-                data-testid="banner-input-pre-title"
-              />
-            </div>
-            <div class="mb-6">
-              <UiFormLabel class="mb-1">{{ getEditorTranslation('main-title-label') }}</UiFormLabel>
-              <SfInput
-                v-model="banner.content.text.title"
-                name="mainTitle"
-                type="text"
-                :placeholder="getEditorTranslation('main-title-placeholder')"
-                data-testid="banner-input-title"
-              />
-            </div>
-            <div class="mb-6">
-              <UiFormLabel class="mb-1">{{ getEditorTranslation('subtitle-label') }}</UiFormLabel>
-              <SfInput
-                v-model="banner.content.text.subtitle"
-                name="subtitle"
-                type="text"
-                :placeholder="getEditorTranslation('subtitle-placeholder')"
-                data-testid="banner-input-sub-title"
-              />
-            </div>
-            <div class="mb-6">
-              <UiFormLabel class="mb-1">{{ getEditorTranslation('description-label') }}</UiFormLabel>
-              <SfTextarea
-                v-model="banner.content.text.htmlDescription"
-                name="description"
-                data-testid="banner-text-content"
-                type="text"
-                class="w-full min-h-[232px]"
-                :placeholder="getEditorTranslation('description-placeholder')"
-              />
-            </div>
-            <div class="mb-6">
-              <UiFormLabel class="mb-1">{{ getEditorTranslation('text-color-label') }}</UiFormLabel>
-              <EditorColorPicker v-model="banner.content.text.color" class="w-full">
-                <template #trigger="{ color, toggle }">
-                  <SfInput v-model="banner.content.text.color" type="text">
-                    <template #suffix>
-                      <button
-                        type="button"
-                        class="border border-[#a0a0a0] rounded-lg cursor-pointer w-10 h-8"
-                        :style="{ backgroundColor: color }"
-                        @mousedown.stop
-                        @click.stop="toggle"
-                      />
-                    </template>
-                  </SfInput>
-                </template>
-              </EditorColorPicker>
-            </div>
-
-            <div class="mb-6">
-              <UiFormLabel class="mb-1">{{ getEditorTranslation('text-align-label') }}</UiFormLabel>
-              <div
-                class="mt-2 w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden"
-              >
-                <div
-                  for="text-align-left"
-                  class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm"
-                  :class="{
-                    'bg-gray-100 text-gray-900 font-semibold': banner.content.text.textAlignment === 'left',
-                  }"
-                  data-testid="slider-text-align-left"
-                  @click="banner.content.text.textAlignment = 'left'"
-                >
-                  <SfIconCheck
-                    class="mr-1 w-[1.1rem]"
-                    :class="{ invisible: banner.content.text.textAlignment !== 'left' }"
-                  />
-                  {{ getEditorTranslation('text-align-option-left-label') }}
-                </div>
-
-                <div
-                  for="text-align-center"
-                  class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm"
-                  :class="{
-                    'bg-gray-100 text-gray-900 font-semibold': banner.content.text.textAlignment === 'center',
-                  }"
-                  data-testid="slider-text-align-center"
-                  @click="banner.content.text.textAlignment = 'center'"
-                >
-                  <SfIconCheck
-                    class="mr-1 w-[1.1rem]"
-                    :class="{ invisible: banner.content.text.textAlignment !== 'center' }"
-                  />
-                  {{ getEditorTranslation('text-align-option-center-label') }}
-                </div>
-
-                <div
-                  for="text-align-right"
-                  class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm"
-                  :class="{
-                    'bg-gray-100 text-gray-900 font-semibold': banner.content.text.textAlignment === 'right',
-                  }"
-                  data-testid="slider-text-align-right"
-                  @click="banner.content.text.textAlignment = 'right'"
-                >
-                  <SfIconCheck
-                    class="mr-1 w-[1.1rem]"
-                    :class="{ invisible: banner.content.text.textAlignment !== 'right' }"
-                  />
-                  {{ getEditorTranslation('text-align-option-right-label') }}
-                </div>
-              </div>
-            </div>
-          </EditorRichTextEditorForm>
+          />
           <div class="mb-6">
             <UiFormLabel class="mb-1">{{ getEditorTranslation('textbox-background-label') }}</UiFormLabel>
             <SfSwitch
@@ -251,110 +126,30 @@
           </div>
 
           <div class="mb-6">
-            <UiFormLabel class="mb-1">{{ getEditorTranslation('textbox-align-x-label') }}</UiFormLabel>
-
-            <div
-              class="mt-2 w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden"
-            >
-              <div
-                for="textbox-align-left"
-                class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.text.align === 'left',
-                }"
-                data-testid="slider-textbox-y-align-left"
-                @click="banner.content.text.align = 'left'"
-              >
-                <SfIconCheck class="mr-1 w-[1.1rem]" :class="{ invisible: banner.content.text.align !== 'left' }" />
-                {{ getEditorTranslation('textbox-align-x-left-label') }}
-              </div>
-
-              <div
-                for="textbox-align-center"
-                class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.text.align === 'center',
-                }"
-                data-testid="slider-textbox-y-align-center"
-                @click="banner.content.text.align = 'center'"
-              >
-                <SfIconCheck class="mr-1 w-[1.1rem]" :class="{ invisible: banner.content.text.align !== 'center' }" />
-                {{ getEditorTranslation('textbox-align-x-center-label') }}
-              </div>
-
-              <div
-                for="textbox-align-right"
-                class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.text.align === 'right',
-                }"
-                data-testid="slider-textbox-y-align-right"
-                @click="banner.content.text.align = 'right'"
-              >
-                <SfIconCheck class="mr-1 w-[1.1rem]" :class="{ invisible: banner.content.text.align !== 'right' }" />
-                {{ getEditorTranslation('textbox-align-x-right-label') }}
-              </div>
-            </div>
+            <EditorOptionsTabs
+              v-model="textboxAlignXModel"
+              :legend="getEditorTranslation('textbox-align-x-label')"
+              test-id-prefix="slider-textbox-align-x"
+              :options="textboxAlignXOptions"
+            />
           </div>
 
           <div class="mb-6">
-            <UiFormLabel class="mb-1">{{ getEditorTranslation('textbox-align-y-label') }}</UiFormLabel>
-
-            <div
-              class="mt-2 w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden"
-            >
-              <div
-                for="align-top"
-                class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.text.justify === 'top',
-                }"
-                data-testid="slider-textbox-align-top"
-                @click="banner.content.text.justify = 'top'"
-              >
-                <SfIconCheck class="mr-1 w-[1.1rem]" :class="{ invisible: banner.content.text.justify !== 'top' }" />
-                {{ getEditorTranslation('textbox-align-y-top-label') }}
-              </div>
-
-              <div
-                for="align-center"
-                class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.text.justify === 'center',
-                }"
-                data-testid="slider-textbox-align-center"
-                @click="banner.content.text.justify = 'center'"
-              >
-                <SfIconCheck class="mr-1 w-[1.1rem]" :class="{ invisible: banner.content.text.justify !== 'center' }" />
-                {{ getEditorTranslation('textbox-align-y-center-label') }}
-              </div>
-
-              <div
-                for="align-bottom"
-                class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.text.justify === 'bottom',
-                }"
-                data-testid="slider-textbox-align-bottom"
-                @click="banner.content.text.justify = 'bottom'"
-              >
-                <SfIconCheck class="mr-1 w-[1.1rem]" :class="{ invisible: banner.content.text.justify !== 'bottom' }" />
-                {{ getEditorTranslation('textbox-align-y-bottom-label') }}
-              </div>
-            </div>
+            <EditorOptionsTabs
+              v-model="textboxAlignYModel"
+              :legend="getEditorTranslation('textbox-align-y-label')"
+              test-id-prefix="slider-textbox-align-y"
+              :options="textboxAlignYOptions"
+            />
           </div>
         </div>
-      </UiAccordionItem>
+      </EditorFormPanel>
 
-      <UiAccordionItem
+      <EditorFormPanel
         v-model="buttonOpen"
-        summary-active-class="bg-neutral-100"
-        summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
+        :title="getEditorTranslation('button-group-label')"
+        data-testid="slider-button-group-title"
       >
-        <template #summary>
-          <h2 data-testid="slider-button-group-title">{{ getEditorTranslation('button-group-label') }}</h2>
-        </template>
-
         <div class="images">
           <div class="mb-6 mt-4">
             <label>
@@ -379,118 +174,38 @@
             />
           </div>
           <div class="mb-6">
-            <UiFormLabel class="mb-1">{{ getEditorTranslation('button-variant-label') }}</UiFormLabel>
-            <div
-              class="mt-2 w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden"
-            >
-              <div
-                class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.button.variant === 'primary',
-                }"
-                data-testid="slider-button-primary"
-                @click="banner.content.button.variant = 'primary'"
-              >
-                <SfIconCheck
-                  class="mr-1 w-[1.1rem]"
-                  :class="{ invisible: banner.content.button.variant !== 'primary' }"
-                />
-                {{ getEditorTranslation('button-variant-primary-label') }}
-              </div>
-
-              <div
-                class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.button.variant === 'secondary',
-                }"
-                data-testid="slider-button-secondary"
-                @click="banner.content.button.variant = 'secondary'"
-              >
-                <SfIconCheck
-                  class="mr-1 w-[1.1rem]"
-                  :class="{ invisible: banner.content.button.variant !== 'secondary' }"
-                />
-                {{ getEditorTranslation('button-variant-secondary-label') }}
-              </div>
-            </div>
+            <EditorOptionsTabs
+              v-model="buttonVariantModel"
+              :legend="getEditorTranslation('button-variant-label')"
+              test-id-prefix="slider-button-variant"
+              :options="buttonVariantOptions"
+            />
           </div>
 
-          <div v-if="config.public.enableRichTextEditorV2" class="mb-6">
-            <UiFormLabel class="mb-1">{{ getEditorTranslation('button-align-label') }}</UiFormLabel>
-            <div
-              class="mt-2 w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden"
-            >
-              <div
-                for="button-align-left"
-                class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.button.alignment === 'left',
-                }"
-                data-testid="slider-button-align-left"
-                @click="banner.content.button.alignment = 'left'"
-              >
-                <SfIconCheck
-                  class="mr-1 w-[1.1rem]"
-                  :class="{ invisible: banner.content.button.alignment !== 'left' }"
-                />
-                {{ getEditorTranslation('button-align-option-left-label') }}
-              </div>
-
-              <div
-                for="button-align-center"
-                class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.button.alignment === 'center',
-                }"
-                data-testid="slider-button-align-center"
-                @click="banner.content.button.alignment = 'center'"
-              >
-                <SfIconCheck
-                  class="mr-1 w-[1.1rem]"
-                  :class="{ invisible: banner.content.button.alignment !== 'center' }"
-                />
-                {{ getEditorTranslation('button-align-option-center-label') }}
-              </div>
-
-              <div
-                for="button-align-right"
-                class="flex items-center justify-center w-1/3 px-4 py-2 cursor-pointer text-sm"
-                :class="{
-                  'bg-gray-100 text-gray-900 font-semibold': banner.content.button.alignment === 'right',
-                }"
-                data-testid="slider-button-align-right"
-                @click="banner.content.button.alignment = 'right'"
-              >
-                <SfIconCheck
-                  class="mr-1 w-[1.1rem]"
-                  :class="{ invisible: banner.content.button.alignment !== 'right' }"
-                />
-                {{ getEditorTranslation('button-align-option-right-label') }}
-              </div>
-            </div>
+          <div class="mb-6">
+            <EditorOptionsTabs
+              v-model="buttonAlignModel"
+              :legend="getEditorTranslation('button-align-label')"
+              test-id-prefix="slider-button-align"
+              :options="buttonAlignOptions"
+            />
           </div>
         </div>
-      </UiAccordionItem>
+      </EditorFormPanel>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { clamp } from '@storefront-ui/shared';
-import { SfTextarea, SfInput, SfIconCheck, SfSwitch } from '@storefront-ui/vue';
+import { SfInput, SfSwitch } from '@storefront-ui/vue';
 import type { BannerFormProps, BannerProps } from './types';
 
 const { blockUuid } = useSiteConfiguration();
 const { activeSlideIndex } = useCarousel();
-const route = useRoute();
-const { data } = useBlockTemplates(
-  route?.meta?.identifier as string,
-  route.meta.type as string,
-  useNuxtApp().$i18n.locale.value,
-);
+const { allBlocks: data } = useBlocks();
 const { findOrDeleteBlockByUuid } = useBlockManager();
 const { placeholderImg, labels, imageDimensions, imageTypes, deleteImage } = usePickerHelper();
-const config = useRuntimeConfig();
 
 const props = defineProps<BannerFormProps>();
 
@@ -519,6 +234,16 @@ const handleImageAddBanner = ({ image, type }: { image: string; type: string }) 
   const { handleImageAdd } = useImageAdd(banner.value?.content?.image);
   handleImageAdd({ image, type });
 };
+const {
+  textboxAlignXModel,
+  textboxAlignXOptions,
+  textboxAlignYModel,
+  textboxAlignYOptions,
+  buttonVariantModel,
+  buttonVariantOptions,
+  buttonAlignModel,
+  buttonAlignOptions,
+} = useEditorOptionsTabs(() => banner.value.content as EditorTarget, getEditorTranslation);
 </script>
 
 <style scoped>
@@ -539,30 +264,7 @@ input[type='number'] {
   "en": {
     "images-group-label": "Images",
 
-    "image-xl-label": "Image XL (Desktop)",
-    "image-l-label": "Image L (Desktop)",
-    "image-m-label": "Image M (Tablet)",
-    "image-s-label": "Image S (Mobile)",
-    "image-url-placeholder": "Enter URL of image",
-    "image-xl-hint": "Recommended dimensions: 1920 × 1080 px",
-    "image-l-hint": "Recommended dimensions: 1024 × 576 px",
-    "image-m-hint": "Recommended dimensions: 768 × 432 px",
-    "image-s-hint": "Recommended dimensions: 320 × 320 px",
-
-    "brightness-label": "Brightness",
-    "alt-label": "Alt",
-    "alt-hint": "Alternative image text",
-
     "text-group-label": "Text",
-    "pretitle-label": "Pre-title",
-    "pretitle-placeholder": "PreTitle",
-    "main-title-label": "Main title",
-    "main-title-placeholder": "Title",
-    "subtitle-label": "Subtitle",
-    "subtitle-placeholder": "SubTitle",
-    "description-label": "Description",
-    "description-placeholder": "Text that supports HTML formatting",
-    "text-color-label": "Text Colour",
     "textbox-background-label": "Textbox Background",
     "textbox-color-label": "Textbox Colour",
     "textbox-opacity-label": "Textbox Opacity",
@@ -576,11 +278,6 @@ input[type='number'] {
     "textbox-align-y-top-label": "Top",
     "textbox-align-y-center-label": "Center",
     "textbox-align-y-bottom-label": "Bottom",
-
-    "text-align-label": "Text Alignment (x)",
-    "text-align-option-left-label": "Left",
-    "text-align-option-center-label": "Center",
-    "text-align-option-right-label": "Right",
 
     "button-align-label": "Button Alignment (x)",
     "button-align-option-left-label": "Left",
@@ -599,30 +296,7 @@ input[type='number'] {
   "de": {
     "images-group-label": "Images",
 
-    "image-xl-label": "Image XL (Desktop)",
-    "image-l-label": "Image L (Desktop)",
-    "image-m-label": "Image M (Tablet)",
-    "image-s-label": "Image S (Mobile)",
-    "image-url-placeholder": "Enter URL of image",
-    "image-xl-hint": "Recommended dimensions: 1920 × 1080 px",
-    "image-l-hint": "Recommended dimensions: 1024 × 576 px",
-    "image-m-hint": "Recommended dimensions: 768 × 432 px",
-    "image-s-hint": "Recommended dimensions: 320 × 320 px",
-
-    "brightness-label": "Brightness",
-    "alt-label": "Alt",
-    "alt-hint": "Alternative image text",
-
     "text-group-label": "Text",
-    "pretitle-label": "Pre-title",
-    "pretitle-placeholder": "PreTitle",
-    "main-title-label": "Main title",
-    "main-title-placeholder": "Title",
-    "subtitle-label": "Subtitle",
-    "subtitle-placeholder": "SubTitle",
-    "description-label": "Description",
-    "description-placeholder": "Text that supports HTML formatting",
-    "text-color-label": "Text Colour",
     "textbox-background-label": "Textbox Background",
     "textbox-color-label": "Textbox Colour",
     "textbox-opacity-label": "Textbox Opacity",
@@ -636,11 +310,6 @@ input[type='number'] {
     "textbox-align-y-top-label": "Top",
     "textbox-align-y-center-label": "Center",
     "textbox-align-y-bottom-label": "Bottom",
-
-    "text-align-label": "Text Alignment (x)",
-    "text-align-option-left-label": "Left",
-    "text-align-option-center-label": "Center",
-    "text-align-option-right-label": "Right",
 
     "button-align-label": "Button Alignment (x)",
     "button-align-option-left-label": "Left",

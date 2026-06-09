@@ -5,7 +5,7 @@
     class="relative"
     :class="{ 'pointer-events-none opacity-50': loading }"
   >
-    <SfLoaderCircular v-if="loading" class="fixed top-[50%] right-0 left-0 m-auto z-[99999]" size="2xl" />
+    <SfLoaderCircular v-if="loading" class="fixed top-[50%] right-0 left-0 m-auto z-max" size="2xl" />
 
     <EditableBlocks
       :identifier="identifier"
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { categoryGetters, categoryTreeGetters } from '@plentymarkets/shop-api';
+import { breadcrumbGetters, categoryGetters } from '@plentymarkets/shop-api';
 import type { Locale } from '#i18n';
 import { SfLoaderCircular } from '@storefront-ui/vue';
 
@@ -28,12 +28,13 @@ defineI18nRoute({
 const { locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const { setItemListMetaData } = useStructuredData();
 const { setCategoriesPageMeta } = useUrlPageMeta();
 const { setBlocksListContext } = useBlocksList();
-const { getFacetsFromURL, checkFiltersInURL } = useCategoryFilter();
-const { fetchProducts, data: productsCatalog, loading } = useProducts();
-const { data: categoryTree } = useCategoryTree();
+const { getFacetsFromURL } = useCategoryFilter();
+const { data: productsCatalog, loading } = useProducts();
 const { buildCategoryLanguagePath } = useLocalization();
+const isItemCategoryPage = computed(() => productsCatalog.value.category?.type === 'item');
 
 const identifier = computed(() =>
   productsCatalog.value.category?.type === 'content' ? productsCatalog.value.category?.id : 0,
@@ -45,27 +46,19 @@ definePageMeta({
   type: 'category',
   isBlockified: true,
   identifier: 0,
+  cacheControl: getCacheControl(),
 });
 
 const breadcrumbs = computed(() => {
-  if (productsCatalog.value.category) {
-    const breadcrumb = categoryTreeGetters.generateBreadcrumbFromCategory(
-      categoryTree.value,
-      categoryGetters.getId(productsCatalog.value.category),
-    );
-    breadcrumb.unshift({ name: t('common.labels.home'), link: '/' });
+  const breadcrumb = breadcrumbGetters.mapFromCategoryBreadcrumbs(productsCatalog.value.breadcrumbs ?? []);
+  breadcrumb.unshift({ name: t('common.labels.home'), link: '/' });
 
-    return breadcrumb;
-  }
-
-  return [];
+  return breadcrumb;
 });
 
 const canonicalDb = productsCatalog.value.category?.details?.[0]?.canonicalLink;
 
 const handleQueryUpdate = async () => {
-  await fetchProducts(getFacetsFromURL()).then(() => checkFiltersInURL());
-
   if (!productsCatalog.value.category) {
     throw createError({
       statusCode: 404,
@@ -76,7 +69,10 @@ const handleQueryUpdate = async () => {
 
 await handleQueryUpdate().then(() => {
   setCategoriesPageMeta(productsCatalog.value, getFacetsFromURL(), canonicalDb);
-  setBlocksListContext(productsCatalog.value.category.type === 'item' ? 'productCategory' : 'content');
+  setBlocksListContext(isItemCategoryPage.value ? 'productCategory' : 'content');
+  if (isItemCategoryPage.value) {
+    setItemListMetaData(productsCatalog.value.products || []);
+  }
 });
 
 const { setPageMeta } = usePageMeta();
@@ -119,7 +115,12 @@ const robotsContent = computed((): string =>
 watch(
   () => route.query,
   async () => {
-    await handleQueryUpdate().then(() => setCategoriesPageMeta(productsCatalog.value, getFacetsFromURL()));
+    await handleQueryUpdate().then(() => {
+      setCategoriesPageMeta(productsCatalog.value, getFacetsFromURL());
+      if (isItemCategoryPage.value) {
+        setItemListMetaData(productsCatalog.value.products || []);
+      }
+    });
   },
 );
 

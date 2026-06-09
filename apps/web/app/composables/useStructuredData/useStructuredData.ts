@@ -2,12 +2,13 @@ import type {
   useStructuredDataReturn,
   SetLogoMeta,
   SetProductMetaData,
+  SetItemListMetaData,
   SetProductRobotsMetaData,
   SetProductCanonicalMetaData,
   UseStructuredDataState,
 } from './types';
-import { categoryTreeGetters, productGetters, reviewGetters, productSeoSettingsGetters } from '@plentymarkets/shop-api';
-import type { CategoryTreeItem, Product, CanonicalAlternate } from '@plentymarkets/shop-api';
+import { productGetters, reviewGetters, productSeoSettingsGetters } from '@plentymarkets/shop-api';
+import type { Product, CanonicalAlternate } from '@plentymarkets/shop-api';
 
 /**
  * @description Composable managing meta data
@@ -21,6 +22,9 @@ export const useStructuredData: useStructuredDataReturn = () => {
   const state = useState<UseStructuredDataState>(`useMeta`, () => ({
     loading: false,
   }));
+
+  const safeSerializeJsonLd = (value: unknown, space?: number) =>
+    JSON.stringify(value, null, space).replaceAll('<', String.raw`\u003C`);
 
   /**
    * @description Function for Setting Logo Metadata.
@@ -44,7 +48,7 @@ export const useStructuredData: useStructuredDataReturn = () => {
       script: [
         {
           type: 'application/ld+json',
-          innerHTML: JSON.stringify(structuredData),
+          innerHTML: safeSerializeJsonLd(structuredData),
         },
       ],
     });
@@ -62,13 +66,17 @@ export const useStructuredData: useStructuredDataReturn = () => {
    * })
    * ```
    */
-  const setProductMetaData: SetProductMetaData = (product: Product, category?: CategoryTreeItem) => {
+  const setProductMetaData: SetProductMetaData = (product: Product) => {
     state.value.loading = true;
     const { price, crossedPrice } = useProductPrice(product);
     const productId = Number(productGetters.getItemId(product));
 
     const { data: productReviews } = useProductReviews(productId);
     const { data: reviewAverage } = useProductReviewAverage(productId);
+
+    const reviewCounts = reviewGetters.getReviewCounts(productReviews.value);
+    const totalReviews = reviewGetters.getTotalReviews(reviewCounts);
+    const averageRating = reviewGetters.getAverageRating(reviewCounts);
 
     let reviews = null;
     if (reviewAverage.value) {
@@ -91,18 +99,20 @@ export const useStructuredData: useStructuredDataReturn = () => {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: productGetters.getName(product),
-      ...(category && { category: categoryTreeGetters.getName(category) }),
+      category: productGetters.getCategoryName(product),
       releaseDate: '',
       image: productGetters.getCoverImage(product),
       identifier: productGetters.getId(product),
       description: product.texts.description,
       disambiguatingDescription: '',
       review: reviews,
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: productGetters.getAverageRating(product),
-        reviewCount: productGetters.getTotalReviews(product),
-      },
+      ...(totalReviews > 0 && {
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: averageRating,
+          reviewCount: totalReviews,
+        },
+      }),
       offers: {
         '@type': 'Offer',
         priceCurrency: productGetters.getSpecialPriceCurrency(product),
@@ -183,10 +193,70 @@ export const useStructuredData: useStructuredDataReturn = () => {
       script: [
         {
           type: 'application/ld+json',
-          innerHTML: JSON.stringify(metaObject, null, 4),
+          innerHTML: safeSerializeJsonLd(metaObject, 4),
         },
       ],
     });
+    state.value.loading = false;
+  };
+
+  const setItemListMetaData: SetItemListMetaData = (products: Product[]) => {
+    state.value.loading = true;
+
+    const runtimeConfig = useRuntimeConfig();
+    const route = useRoute();
+    const localePath = useLocalePath();
+    const isSingleProductUrlSchemeEnabled = useCallisto().isEnabled;
+
+    const itemListElement = products.reduce<Array<Record<string, unknown>>>((result, product, index) => {
+      const itemId = productGetters.getItemId(product);
+      const urlPath = productGetters.getUrlPath(product);
+
+      if (!itemId || !urlPath) {
+        return result;
+      }
+
+      let productPath = '';
+
+      if (isSingleProductUrlSchemeEnabled) {
+        productPath = localePath(`/${urlPath}/a-${itemId}`);
+      } else {
+        const basePath = `/${urlPath}_${itemId}`;
+        const shouldAppendVariation = productGetters.shouldAppendVariationToLink(product);
+        const variationId = productGetters.getVariationId(product);
+
+        productPath = localePath(shouldAppendVariation && variationId ? `${basePath}_${variationId}` : basePath);
+      }
+
+      result.push({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: `${runtimeConfig.public.domain}${productPath}`,
+        name: productGetters.getName(product),
+      });
+
+      return result;
+    }, []);
+
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListOrder: 'https://schema.org/ItemListOrderAscending',
+      numberOfItems: itemListElement.length,
+      url: `${runtimeConfig.public.domain}${localePath(route.fullPath)}`,
+      itemListElement,
+    };
+
+    useHead({
+      script: [
+        {
+          key: 'item-list-structured-data',
+          type: 'application/ld+json',
+          innerHTML: safeSerializeJsonLd(structuredData),
+        },
+      ],
+    });
+
     state.value.loading = false;
   };
 
@@ -244,6 +314,7 @@ export const useStructuredData: useStructuredDataReturn = () => {
   return {
     setLogoMeta,
     setProductMetaData,
+    setItemListMetaData,
     setProductRobotsMetaData,
     setProductCanonicalMetaData,
     ...toRefs(state.value),

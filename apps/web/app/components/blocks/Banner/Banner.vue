@@ -14,7 +14,7 @@
 
     <div
       v-if="banner.text"
-      :class="['absolute inset-0 p-4 flex flex-col md:basis-2/4', { 'md:p-10': banner.text.bgcolor }]"
+      :class="['absolute inset-0 p-4 flex flex-col @md:basis-2/4', { '@md:p-10': banner.text.bgcolor }]"
       :style="{
         color: banner.text.color,
         textAlign: getTextAlignment(rteAlignment ?? ''),
@@ -33,7 +33,7 @@
         <TextContent :text="banner.text" :index="props.slideIndex" />
         <UiButton
           v-if="banner.button && banner.button.label && banner.button.link"
-          class="flex flex-col md:flex-row gap-4 mt-6"
+          class="flex flex-col @md:flex-row gap-4 mt-6"
           :tag="NuxtLink"
           :to="localePath(banner.button.link ?? '')"
           :variant="banner.button.variant ?? 'primary'"
@@ -62,11 +62,7 @@ const props = defineProps<BannerProps & { slideIndex?: number }>();
 const banner = computed(() => props.content);
 const { hexToRgba, getImageHeight, getTextAlignment, getContentPosition } = useBlockContentHelper();
 
-const config = useRuntimeConfig();
-
-const rteAlignment = computed(() =>
-  config.public.enableRichTextEditorV2 ? banner.value.button?.alignment : banner.value.text?.textAlignment,
-);
+const rteAlignment = computed(() => banner.value.button?.alignment);
 
 const getImageUrl = () => {
   switch (viewport.breakpoint.value) {
@@ -86,6 +82,6 @@ const getImageUrl = () => {
 };
 
 const bannerContentClass = computed(() => {
-  return isMobile.value ? 'p-4 md:p-6 rounded-lg w-full' : 'p-4 md:p-6 rounded-lg md:max-w-[50%] mx-5';
+  return isMobile.value ? 'p-4 @md:p-6 rounded-lg w-full' : 'p-4 @md:p-6 rounded-lg @md:max-w-[50%] mx-5';
 });
 </script>

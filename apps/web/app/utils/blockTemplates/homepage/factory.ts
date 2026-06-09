@@ -1,6 +1,5 @@
 import type { Block } from '@plentymarkets/shop-api';
 import { v4 as uuid } from 'uuid';
-import { createFooter } from '../footer/factory';
 
 export const BANNER_BLOCK_NAME = 'Banner';
 
@@ -53,6 +52,7 @@ export function createHomepage(): Block[] {
         uuid: uuid(),
       },
       configuration: {
+        visible: true,
         controls: {
           displayArrows: true,
           color: '#a39f9f',
@@ -179,6 +179,7 @@ export function createHomepage(): Block[] {
         isGlobalTemplate: false,
       },
       configuration: {
+        visible: true,
         columnWidths: [6, 6],
       },
       content: [
@@ -287,6 +288,5 @@ export function createHomepage(): Block[] {
         },
       },
     },
-    createFooter(),
   ];
 }

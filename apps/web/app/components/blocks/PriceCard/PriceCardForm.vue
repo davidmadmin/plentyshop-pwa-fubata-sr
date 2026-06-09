@@ -1,44 +1,35 @@
 <template>
-  <UiAccordionItem
-    v-model="cardOpen"
-    summary-active-class="bg-neutral-100"
-    summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
-    data-testid="price-card"
-  >
-    <template #summary>
-      <h2>{{ getEditorTranslation('card-section-label') }}</h2>
-    </template>
-
+  <EditorFormPanel v-model="cardOpen" :title="getEditorTranslation('card-section-label')" data-testid="price-card">
     <div class="py-4">
       <UiFormLabel class="block mb-4">{{ getEditorTranslation('elements-display-order') }}</UiFormLabel>
 
       <draggable
         v-if="priceCardBlock.fieldsOrder.length"
         v-model="priceCardBlock.fieldsOrder"
-        item-key="field"
-        handle=".drag-slides-handle"
-        class="rounded space-y-3"
         :filter="'.no-drag'"
+        class="rounded space-y-3"
+        handle=".drag-slides-handle"
+        item-key="field"
       >
         <template #item="{ element: fieldKey, index }: { element: PriceCardFieldKey; index: number }">
           <div
             :key="fieldKey"
-            class="flex items-center justify-between drag-slides-handle cursor-move"
             :data-testid="`price-card-field-${fieldKey}`"
+            class="flex items-center justify-between drag-slides-handle cursor-move"
           >
             <div class="flex items-center gap-3">
               <button
-                class="drag-slides-handle cursor-grab p-2 hover:bg-gray-100 rounded-full"
                 :aria-label="getEditorTranslation('drag-reorder-aria')"
                 :data-testid="`actions-drag-field-handle-${index}`"
+                class="drag-slides-handle cursor-grab p-2 hover:bg-gray-100 rounded-full"
               >
-                <NuxtImg width="18" height="18" :src="dragIcon" />
+                <NuxtImg :src="dragIcon" height="18" width="18" />
               </button>
 
               <span>{{ fieldLabels[fieldKey] }}</span>
 
               <template v-if="fieldKey === 'itemBundle'">
-                <SfTooltip class="leading-none" :label="getEditorTranslation('item-bundle-tooltip')" placement="top">
+                <SfTooltip :label="getEditorTranslation('item-bundle-tooltip')" class="leading-none" placement="top">
                   <SfIconInfo size="sm" />
                 </SfTooltip>
               </template>
@@ -46,8 +37,8 @@
 
             <SfSwitch
               v-model="priceCardBlock.fields[fieldKey]"
-              :disabled="priceCardBlock.fieldsDisabled?.includes(fieldKey)"
               :data-testid="`price-card-visible-${fieldKey}`"
+              :disabled="priceCardBlock.fieldsDisabled?.includes(fieldKey)"
             />
           </div>
         </template>
@@ -57,49 +48,20 @@
     <hr class="my-4" />
 
     <div class="py-4">
-      <UiFormLabel class="block mb-2">{{ getEditorTranslation('wishlist-size-label') }}</UiFormLabel>
-
-      <div
-        class="w-full inline-flex rounded-lg border border-gray-300 bg-white text-gray-700 overflow-hidden"
-        data-testid="wishlist-size-toggle"
-      >
-        <div
-          class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm border-r"
-          :class="{
-            'bg-gray-100 text-gray-900 font-semibold': priceCardBlock.wishlistSize === 'small',
-          }"
-          data-testid="wishlist-size-small"
-          @click="priceCardBlock.wishlistSize = 'small'"
-        >
-          <SfIconCheck :class="{ invisible: priceCardBlock.wishlistSize !== 'small' }" class="mr-1 w-[1.1rem]" />
-          {{ getEditorTranslation('wishlist-size-small') }}
-        </div>
-
-        <div
-          class="flex items-center justify-center w-1/2 px-4 py-2 cursor-pointer text-sm"
-          :class="{
-            'bg-gray-100 text-gray-900 font-semibold': priceCardBlock.wishlistSize === 'large',
-          }"
-          data-testid="wishlist-size-large"
-          @click="priceCardBlock.wishlistSize = 'large'"
-        >
-          <SfIconCheck :class="{ invisible: priceCardBlock.wishlistSize !== 'large' }" class="mr-1 w-[1.1rem]" />
-          {{ getEditorTranslation('wishlist-size-large') }}
-        </div>
-      </div>
+      <EditorOptionsTabs
+        v-model="wishlistSizeModel"
+        :legend="getEditorTranslation('wishlist-size-label')"
+        :options="wishlistSizeOptions"
+        test-id-prefix="wishlist-size"
+      />
     </div>
-  </UiAccordionItem>
+  </EditorFormPanel>
 
-  <UiAccordionItem
+  <EditorFormPanel
     v-model="layoutOpen"
-    summary-active-class="bg-neutral-100"
-    summary-class="w-full hover:bg-neutral-100 px-4 py-5 flex justify-between items-center select-none border-b"
+    :title="getEditorTranslation('layout-settings-label')"
     data-testid="price-card-layout"
   >
-    <template #summary>
-      <h2>{{ getEditorTranslation('layout-settings-label') }}</h2>
-    </template>
-
     <div class="flex items-center justify-between py-4">
       <UiFormLabel>{{ getEditorTranslation('drop-shadow-label') }}</UiFormLabel>
       <SfSwitch v-model="priceCardBlock.dropShadow" data-testid="price-card-drop-shadow" />
@@ -114,12 +76,12 @@
       <UiFormLabel class="mb-2 block">{{ getEditorTranslation('border-color-label') }}</UiFormLabel>
       <EditorColorPicker v-model="priceCardBlock.borderColor" class="w-full">
         <template #trigger="{ color, toggle }">
-          <SfInput v-model="priceCardBlock.borderColor" type="text" data-testid="price-card-border-color">
+          <SfInput v-model="priceCardBlock.borderColor" data-testid="price-card-border-color" type="text">
             <template #suffix>
               <button
-                type="button"
-                class="border border-[#a0a0a0] rounded-lg cursor-pointer w-10 h-8"
                 :style="{ backgroundColor: color }"
+                class="border border-[#a0a0a0] rounded-lg cursor-pointer w-10 h-8"
+                type="button"
                 @mousedown.stop
                 @click.stop="toggle"
               />
@@ -135,36 +97,36 @@
           <span><SfIconArrowUpward /></span>
           <input
             v-model.number="priceCardBlock.layout.paddingTop"
-            type="number"
             class="w-12 text-center outline-none"
             data-testid="padding-top"
+            type="number"
           />
         </div>
         <div class="flex items-center justify-center gap-1 px-2 py-1 bg-white border-r">
           <span><SfIconArrowDownward /></span>
           <input
             v-model.number="priceCardBlock.layout.paddingBottom"
-            type="number"
             class="w-12 text-center outline-none"
             data-testid="padding-bottom"
+            type="number"
           />
         </div>
         <div class="flex items-center justify-center gap-1 px-2 py-1 bg-white border-r">
           <span><SfIconArrowBack /></span>
           <input
             v-model.number="priceCardBlock.layout.paddingLeft"
-            type="number"
             class="w-12 text-center outline-none"
             data-testid="padding-left"
+            type="number"
           />
         </div>
         <div class="flex items-center justify-center gap-1 px-2 py-1 bg-white">
           <span><SfIconArrowForward /></span>
           <input
             v-model.number="priceCardBlock.layout.paddingRight"
-            type="number"
             class="w-12 text-center outline-none"
             data-testid="padding-right"
+            type="number"
           />
         </div>
       </div>
@@ -174,15 +136,14 @@
         </span>
       </div>
     </div>
-  </UiAccordionItem>
+  </EditorFormPanel>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import draggable from 'vuedraggable';
 import {
   SfSwitch,
   SfInput,
-  SfIconCheck,
   SfIconArrowUpward,
   SfIconArrowDownward,
   SfIconArrowForward,
@@ -194,12 +155,7 @@ import dragIcon from '~/assets/icons/paths/drag.svg';
 import type { PriceCardFieldKey, PriceCardContent } from '~/components/ui/PurchaseCard/types';
 import type { PriceCardFormProps } from '~/components/blocks/PriceCard/types';
 
-const route = useRoute();
-const { data } = useBlockTemplates(
-  route?.meta?.identifier as string,
-  route.meta.type as string,
-  useNuxtApp().$i18n.locale.value,
-);
+const { allBlocks: data } = useBlocks();
 const { blockUuid } = useSiteConfiguration();
 const { findOrDeleteBlockByUuid } = useBlockManager();
 
@@ -234,7 +190,12 @@ const fieldLabels = {
 };
 
 const cardOpen = ref(true);
-const layoutOpen = ref(false);
+const layoutOpen = ref(true);
+
+const { wishlistSizeModel, wishlistSizeOptions } = useEditorOptionsTabs(
+  () => priceCardBlock.value,
+  getEditorTranslation,
+);
 </script>
 
 <i18n lang="json">

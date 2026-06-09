@@ -5,7 +5,6 @@
 </template>
 
 <script lang="ts" setup>
-import { getHomepageTemplate } from '~/utils/blockTemplates/homepage';
 import type { Locale } from '#i18n';
 
 defineI18nRoute({
@@ -18,23 +17,13 @@ definePageMeta({
   type: 'immutable',
   identifier: 'index',
   middleware: ['newsletter-confirmation-client', 'notifyme-interactions-client'],
+  cacheControl: getCacheControl(),
 });
 
-const { $i18n } = useNuxtApp();
-
 const { setPageMeta } = usePageMeta();
-const route = useRoute();
-const { setDefaultTemplate } = useBlockTemplates(
-  route?.meta?.identifier as string,
-  route.meta.type as string,
-  useNuxtApp().$i18n.locale.value,
-);
 
 const icon = 'home';
 setPageMeta(t('homepage.title'), icon);
-
-const homepageTemplate = await getHomepageTemplate($i18n.locale.value);
-setDefaultTemplate(homepageTemplate);
 
 const { getRobots, setRobotForStaticPage } = useRobots();
 getRobots();
