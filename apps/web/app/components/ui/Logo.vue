@@ -29,8 +29,9 @@
 <script setup lang="ts">
 const runtimeConfig = useRuntimeConfig();
 const { getSetting: getHeaderLogo } = useSiteSettings('headerLogo');
+const { getEffectiveHeaderLogo } = useBrandingAssetOverrides();
 
-const headerLogo = computed(() => runtimeConfig.public.headerLogoOverride || getHeaderLogo());
+const headerLogo = computed(() => getEffectiveHeaderLogo(getHeaderLogo()));
 
 const storeName = runtimeConfig.public.storename;
 
