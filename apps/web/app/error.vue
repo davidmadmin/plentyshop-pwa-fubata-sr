@@ -18,6 +18,7 @@ interface ErrorProp {
 }
 const props = defineProps<{ error: ErrorProp }>();
 const { setInitialDataSSR } = useInitialSetup();
+const runtimeConfig = useRuntimeConfig().public;
 
 const { getSetting: getFavicon } = useSiteSettings('favicon');
 const { getSetting: getOgTitle } = useSiteSettings('ogTitle');
@@ -26,13 +27,14 @@ const { getSetting: getMetaDescription } = useSiteSettings('metaDescription');
 const { getSetting: getMetaKeywords } = useSiteSettings('metaKeywords');
 const { getSetting: getRobots } = useSiteSettings('robots');
 const { getSetting: getPrimaryColor } = useSiteSettings('primaryColor');
+const getEffectiveFavicon = () => runtimeConfig.favicon || getFavicon();
 
 const ogTitle = ref(getOgTitle());
 const ogImage = ref(getOgImage());
 const description = ref(getMetaDescription());
 const keywords = ref(getMetaKeywords());
 const robots = ref(getRobots());
-const fav = ref(getFavicon());
+const fav = ref(getEffectiveFavicon());
 const themeColor = ref(getPrimaryColor());
 
 watchEffect(() => {
@@ -41,7 +43,7 @@ watchEffect(() => {
   description.value = getMetaDescription();
   keywords.value = getMetaKeywords();
   robots.value = getRobots();
-  fav.value = getFavicon();
+  fav.value = getEffectiveFavicon();
   themeColor.value = getPrimaryColor();
 });
 
