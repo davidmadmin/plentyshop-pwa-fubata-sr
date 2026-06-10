@@ -21,14 +21,14 @@
 <script setup lang="ts">
 import { paths } from '~/utils/paths';
 const { headerContainer } = useBlocks();
-const { getSetting: getPrimaryColor } = useSiteSettings('primaryColor');
+const { getSetting: getHeaderBackgroundColor } = useSiteSettings('headerBackgroundColor');
 
 const headerBackgroundColor = computed(() => {
   const children = headerContainer.value?.content as
     | Array<{ name: string; content: { color?: { backgroundColor?: string } } }>
     | undefined;
   const utilityBar = children?.find((block) => block.name === 'UtilityBar');
-  return utilityBar?.content?.color?.backgroundColor ?? getPrimaryColor();
+  return utilityBar?.content?.color?.backgroundColor ?? getHeaderBackgroundColor();
 });
 
 const localePath = useLocalePath();
