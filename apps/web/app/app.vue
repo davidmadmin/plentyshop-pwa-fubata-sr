@@ -92,7 +92,6 @@ const { setStaticPageMeta } = useUrlPageMeta();
 const { isInEditorClient, isMobilePreview, previewWidth } = useEditorState();
 
 const enablePopover = useRuntimeConfig().public.enableAddBlockPopover;
-const runtimeConfig = useRuntimeConfig().public;
 
 const isLargeScreen = useMediaQuery('(min-width: 1024px)');
 const clientPreview = computed(() => isInEditorClient.value && isLargeScreen.value);
@@ -116,9 +115,9 @@ const category = computed(() => productsCatalog.value?.category);
 const isCategoryPage = computed(() => route.meta?.type === 'category' && !!category.value);
 
 const { getAssetsOfType } = useCustomAssets();
+const { getEffectiveFavicon } = useBrandingAssetOverrides();
 
 const isSafeMode = computed(() => customAssetsSafeMode());
-const getEffectiveFavicon = () => runtimeConfig.favicon || getFavicon();
 
 const getCategoryMetaTitle = () => {
   if (isCategoryPage.value) {
@@ -159,7 +158,7 @@ const ogDescription = ref(getCategoryMetaDescription());
 const description = ref(getCategoryMetaDescription());
 const keywords = ref(getCategoryMetaKeywords());
 const robots = ref(getRobots());
-const fav = ref(getEffectiveFavicon());
+const fav = ref(getEffectiveFavicon(getFavicon()));
 const themeColor = ref(getPrimaryColor());
 
 const cssAssets = computed(() => (isSafeMode.value ? [] : getAssetsOfType('css')));
@@ -194,7 +193,7 @@ watchEffect(() => {
   description.value = getCategoryMetaDescription();
   keywords.value = getCategoryMetaKeywords();
   robots.value = getRobots();
-  fav.value = getEffectiveFavicon();
+  fav.value = getEffectiveFavicon(getFavicon());
   themeColor.value = getPrimaryColor();
 });
 
