@@ -5,9 +5,9 @@
         ref="logo"
         :src="headerLogo"
         :alt="`${storeName} logo`"
-        class="w-100 py-2"
-        width="150"
-        height="40"
+        class="h-[40px] md:h-[48px] w-auto max-w-[220px] md:max-w-[260px] object-contain"
+        width="335"
+        height="150"
         preload
       />
     </template>
@@ -19,7 +19,7 @@
         :alt="`${storeName} logo`"
         :width="imgWidth"
         :height="imgHeight"
-        class="max-h-[100px] max-w-[200px]"
+        class="h-[40px] md:h-[48px] w-auto max-w-[220px] md:max-w-[260px] object-contain"
         preload
       />
     </template>
@@ -30,7 +30,7 @@
 const runtimeConfig = useRuntimeConfig();
 const { getSetting: getHeaderLogo } = useSiteSettings('headerLogo');
 
-const headerLogo = computed(() => getHeaderLogo());
+const headerLogo = computed(() => runtimeConfig.public.headerLogoOverride || getHeaderLogo());
 
 const storeName = runtimeConfig.public.storename;
 
