@@ -92,6 +92,7 @@ const { setStaticPageMeta } = useUrlPageMeta();
 const { isInEditorClient, isMobilePreview, previewWidth } = useEditorState();
 
 const enablePopover = useRuntimeConfig().public.enableAddBlockPopover;
+const runtimeConfig = useRuntimeConfig().public;
 
 const isLargeScreen = useMediaQuery('(min-width: 1024px)');
 const clientPreview = computed(() => isInEditorClient.value && isLargeScreen.value);
@@ -117,6 +118,7 @@ const isCategoryPage = computed(() => route.meta?.type === 'category' && !!categ
 const { getAssetsOfType } = useCustomAssets();
 
 const isSafeMode = computed(() => customAssetsSafeMode());
+const getEffectiveFavicon = () => runtimeConfig.favicon || getFavicon();
 
 const getCategoryMetaTitle = () => {
   if (isCategoryPage.value) {
@@ -157,7 +159,7 @@ const ogDescription = ref(getCategoryMetaDescription());
 const description = ref(getCategoryMetaDescription());
 const keywords = ref(getCategoryMetaKeywords());
 const robots = ref(getRobots());
-const fav = ref(getFavicon());
+const fav = ref(getEffectiveFavicon());
 const themeColor = ref(getPrimaryColor());
 
 const cssAssets = computed(() => (isSafeMode.value ? [] : getAssetsOfType('css')));
@@ -192,7 +194,7 @@ watchEffect(() => {
   description.value = getCategoryMetaDescription();
   keywords.value = getCategoryMetaKeywords();
   robots.value = getRobots();
-  fav.value = getFavicon();
+  fav.value = getEffectiveFavicon();
   themeColor.value = getPrimaryColor();
 });
 
