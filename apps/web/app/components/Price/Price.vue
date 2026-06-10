@@ -1,10 +1,10 @@
 <template>
   <div class="text-sm py-1">
-    <span class="mr-2 text-secondary-500 font-bold text-2xl" data-testid="price">
+    <span class="price-display mr-2 font-bold text-2xl" data-testid="price">
       <span>{{ format(price) }}</span>
       <span>{{ t('common.labels.asterisk') }} </span>
     </span>
-    <span v-if="crossedPrice && differentPrices" class="text-base font-normal text-neutral-500 line-through">
+    <span v-if="crossedPrice && differentPrices" class="price-display-muted text-base font-normal line-through">
       {{ format(crossedPrice) }}
     </span>
   </div>
