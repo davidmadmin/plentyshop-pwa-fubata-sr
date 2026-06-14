@@ -1,0 +1,38 @@
+/*
+ * Price selector contract.
+ * Keep selectors tied to explicit commerce hooks so unrelated numbers and labels
+ * retain the globally configured shop font.
+ */
+.price-font-preset-active
+  :is(
+    [data-testid='price'],
+    [data-testid='price'] + .line-through,
+    [data-testid='product-card-vertical-price'],
+    [data-testid='search-suggestion-product'] .tabular-nums,
+    [data-testid='cart-item-price'],
+    [data-testid='product-full-price'],
+    [data-testid='order-property-surcharge'],
+    [data-testid='subtotal'],
+    [data-testid='shipping'],
+    [data-testid='coupon-value'],
+    [data-testid='vat'],
+    [data-testid='total-net'],
+    [data-testid='total']
+  ) {
+  font-family: var(--price-font-family);
+  font-style: var(--price-font-style);
+  font-weight: var(--price-font-weight);
+}
+
+.price-font-preset-active [data-testid='shipping-method-list'] label > div > .flex > .ml-auto,
+.price-font-preset-active table.w-full.text-left.typography-text-sm.mb-2 tbody td:first-child {
+  font-family: var(--price-font-family);
+  font-style: var(--price-font-style);
+  font-weight: var(--price-font-weight);
+}
+
+.price-font-preset-active [data-testid='product-card-vertical-price'] + .line-through {
+  font-family: var(--price-font-family);
+  font-style: var(--price-font-style);
+  font-weight: var(--price-font-weight);
+}
