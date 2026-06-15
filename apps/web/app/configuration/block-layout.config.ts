@@ -40,6 +40,7 @@ export const BLOCK_LAYOUT_RULES: Record<string, BlockLayoutRule> = {
   PerPageFilter: { defaultFullWidth: false, padding: true },
   Sort: { defaultFullWidth: false, padding: true },
   SortFilter: { defaultFullWidth: false, padding: true },
+  ScrewFinder: { container: false, padding: false, defaultFullWidth: true },
 
   Carousel: { padding: false },
 };
