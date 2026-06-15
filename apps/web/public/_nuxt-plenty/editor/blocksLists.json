@@ -1299,11 +1299,11 @@
   "screw-finder": {
     "category": "screw-finder",
     "accessControl": ["content"],
-    "title": "Product Finder",
+    "title": "Schrauben Finder",
     "blockName": "ScrewFinder",
     "variations": [
       {
-        "title": "Screw Finder",
+        "title": "Schrauben Finder",
         "image": "https://cdn02.plentymarkets.com/v5vzmmmcb10k/frontend/PWA/Blocks/product_galleries.png",
         "template": {
           "en": {
