@@ -92,6 +92,8 @@ export function createCategory(): Block[] {
             filtersDisabled: [],
             showAllFiltersImmediately: true,
             numberOfFiltersToShowInitially: 0,
+            collapseLongFilterLists: false,
+            initiallyVisibleFilterOptions: 3,
           },
         },
         {

@@ -75,6 +75,37 @@
           </SfInput>
         </label>
       </div>
+
+      <div v-if="sortFilterBlock.fields.customizedFilters" class="py-2">
+        <div class="flex items-center justify-between gap-3">
+          <UiFormLabel for="collapse-long-filter-lists" class="m-0">
+            {{ getEditorTranslation('collapse-long-filter-lists-label') }}
+          </UiFormLabel>
+
+          <SfSwitch
+            id="collapse-long-filter-lists"
+            v-model="sortFilterBlock.collapseLongFilterLists"
+            data-testid="switch-collapse-long-filter-lists"
+            class="checked:bg-editor-button checked:before:hover:bg-editor-button checked:border-gray-500 checked:hover:border:bg-gray-700 hover:border-gray-700 hover:before:bg-gray-700 checked:hover:bg-gray-300 checked:hover:border-gray-400"
+          />
+        </div>
+        <p class="mt-2 text-sm text-neutral-600">
+          {{ getEditorTranslation('collapse-long-filter-lists-description') }}
+        </p>
+      </div>
+
+      <div v-if="sortFilterBlock.fields.customizedFilters && sortFilterBlock.collapseLongFilterLists" class="py-2">
+        <UiFormLabel for="initially-visible-filter-options">
+          {{ getEditorTranslation('initially-visible-filter-options-label') }}
+        </UiFormLabel>
+        <SfInput
+          id="initially-visible-filter-options"
+          v-model.number="sortFilterBlock.initiallyVisibleFilterOptions"
+          type="number"
+          min="1"
+          data-testid="input-initially-visible-filter-options"
+        />
+      </div>
     </div>
   </EditorFormPanel>
 
@@ -113,6 +144,14 @@ const sortFilterBlock = computed<SortFilterContent>(() => {
 
   if (typeof content.numberOfFiltersToShowInitially === 'undefined') {
     content.numberOfFiltersToShowInitially = 0;
+  }
+
+  if (typeof content.collapseLongFilterLists === 'undefined') {
+    content.collapseLongFilterLists = false;
+  }
+
+  if (!Number.isInteger(content.initiallyVisibleFilterOptions) || Number(content.initiallyVisibleFilterOptions) < 1) {
+    content.initiallyVisibleFilterOptions = 3;
   }
 
   return content as SortFilterContent;
@@ -158,6 +197,9 @@ const fieldLabels: Record<string, string> = {
 
     "show-filters-immediately-label": "Show all customized filters immediately",
     "number-of-filters-label": "Number of customized filters to show initially",
+    "collapse-long-filter-lists-label": "Collapse long filter option lists",
+    "collapse-long-filter-lists-description": "Long lists collapse only when at least two options can be hidden.",
+    "initially-visible-filter-options-label": "Initially visible options",
     "items-per-page-label": "Items per page",
     "layout-label": "Layout"
   },
@@ -176,6 +218,9 @@ const fieldLabels: Record<string, string> = {
     "enable-filters-label": "Enable filters",
     "show-filters-immediately-label": "Show all customized filters immediately",
     "number-of-filters-label": "Number of customized filters to show initially",
+    "collapse-long-filter-lists-label": "Lange Filteroptionslisten einklappen",
+    "collapse-long-filter-lists-description": "Lange Listen werden nur eingeklappt, wenn mindestens zwei Optionen ausgeblendet werden können.",
+    "initially-visible-filter-options-label": "Anfangs sichtbare Optionen",
     "items-per-page-label": "Items per page",
     "layout-label": "Layout"
   }

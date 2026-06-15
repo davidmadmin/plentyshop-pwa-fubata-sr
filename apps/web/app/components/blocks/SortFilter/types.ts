@@ -28,6 +28,8 @@ export type SortFilterContent = {
   filtersDisabled: SortFilterFieldKey[];
   showAllFiltersImmediately: boolean;
   numberOfFiltersToShowInitially?: number;
+  collapseLongFilterLists?: boolean;
+  initiallyVisibleFilterOptions?: number;
   layout: {
     fullWidth?: boolean;
   };

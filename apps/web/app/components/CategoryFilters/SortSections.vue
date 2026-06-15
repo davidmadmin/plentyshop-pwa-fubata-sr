@@ -77,28 +77,45 @@
       </form>
 
       <div v-else class="mb-3">
-        <SfListItem
-          v-for="(filter, index) in facetGetters.getFilters(facet)"
-          :key="index"
-          tag="label"
-          size="sm"
-          :data-testid="'category-filter-' + index"
-          class="px-1.5 bg-transparent hover:bg-transparent"
+        <div :id="filterListId">
+          <SfListItem
+            v-for="(filter, index) in visibleFilters"
+            :key="filter.id"
+            tag="label"
+            size="sm"
+            :data-testid="'category-filter-' + index"
+            class="px-1.5 bg-transparent hover:bg-transparent"
+          >
+            <template #prefix>
+              <SfCheckbox
+                :id="filter.id"
+                v-model="models[filter.id]"
+                :value="filter"
+                class="flex items-center"
+                @change="facetChange"
+              />
+            </template>
+            <p class="select-none">
+              <span class="mr-2 text-sm">{{ filter.name ?? '' }}</span>
+              <SfCounter size="sm">{{ filter.count ?? 0 }}</SfCounter>
+            </p>
+          </SfListItem>
+        </div>
+
+        <button
+          v-if="showFilterListToggle"
+          type="button"
+          class="mx-4 mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary-700 hover:text-primary-800"
+          :aria-expanded="filterListExpanded"
+          :aria-controls="filterListId"
+          :aria-label="filterListToggleAriaLabel"
+          data-testid="filter-options-toggle"
+          @click="filterListExpanded = !filterListExpanded"
         >
-          <template #prefix>
-            <SfCheckbox
-              :id="filter.id"
-              v-model="models[filter.id]"
-              :value="filter"
-              class="flex items-center"
-              @change="facetChange"
-            />
-          </template>
-          <p class="select-none">
-            <span class="mr-2 text-sm">{{ filter.name ?? '' }}</span>
-            <SfCounter size="sm">{{ filter.count ?? 0 }}</SfCounter>
-          </p>
-        </SfListItem>
+          <SfIconExpandLess v-if="filterListExpanded" class="w-4 h-4" />
+          <SfIconExpandMore v-else class="w-4 h-4" />
+          {{ filterListToggleText }}
+        </button>
       </div>
     </SfAccordionItem>
   </div>
@@ -117,17 +134,67 @@ import {
   SfCheckbox,
   SfCounter,
   SfIconArrowUpward,
+  SfIconExpandLess,
+  SfIconExpandMore,
 } from '@storefront-ui/vue';
 import type { FilterProps } from '~/components/CategoryFilters/types';
 import type { Filters } from '~/composables';
 import type { SortFilterContent } from '~/components/blocks/SortFilter/types';
 const { getFacetsFromURL, updateFilters, updatePrices } = useCategoryFilter();
+const { t } = useI18n();
 
 const open = ref(true);
 const props = defineProps<FilterProps>();
-const filters = facetGetters.getFilters(props.facet ?? ({} as FilterGroup)) as Filter[];
 const models = ref({} as Filters);
 const configuration = computed(() => props.configuration || ({} as SortFilterContent));
+const filterListExpanded = ref(false);
+const filterListId = `facet-options-${props.facet?.id ?? 'unknown'}`;
+
+const filters = computed(() => facetGetters.getFilters(props.facet ?? ({} as FilterGroup)) as Filter[]);
+
+const initiallyVisibleFilterOptions = computed(() => {
+  const configuredValue = Number(configuration.value.initiallyVisibleFilterOptions);
+  return Number.isInteger(configuredValue) && configuredValue >= 1 ? configuredValue : 3;
+});
+
+const shouldCollapseFilterList = computed(
+  () =>
+    facetGetters.getType(props.facet ?? ({} as FilterGroup)) === 'dynamic' &&
+    (configuration.value.collapseLongFilterLists ?? false) &&
+    filters.value.length > initiallyVisibleFilterOptions.value + 1,
+);
+
+const selectedFilterIds = computed(() => {
+  const selectedIds = new Set(getFacetsFromURL().facets?.split(',') ?? []);
+  return selectedIds;
+});
+
+const collapsedFilters = computed(() => {
+  const initiallyVisible = filters.value.slice(0, initiallyVisibleFilterOptions.value);
+  const initiallyVisibleIds = new Set(initiallyVisible.map((filter) => filter.id.toString()));
+  const selectedOutsideInitialRange = filters.value.filter(
+    (filter) => selectedFilterIds.value.has(filter.id.toString()) && !initiallyVisibleIds.has(filter.id.toString()),
+  );
+
+  return [...initiallyVisible, ...selectedOutsideInitialRange];
+});
+
+const visibleFilters = computed(() => {
+  if (!shouldCollapseFilterList.value || filterListExpanded.value) return filters.value;
+  return collapsedFilters.value;
+});
+
+const hiddenFilterCount = computed(() => filters.value.length - collapsedFilters.value.length);
+const showFilterListToggle = computed(() => shouldCollapseFilterList.value && hiddenFilterCount.value > 0);
+const filterListToggleText = computed(() =>
+  filterListExpanded.value ? t('show-fewer-options') : t('show-more-options', { count: hiddenFilterCount.value }),
+);
+const filterListToggleAriaLabel = computed(() => {
+  const facetName = props.facet ? facetGetters.getName(props.facet) : '';
+  return filterListExpanded.value
+    ? t('show-fewer-options-for', { facet: facetName })
+    : t('show-more-options-for', { count: hiddenFilterCount.value, facet: facetName });
+});
 
 const minPrice = ref(getFacetsFromURL().priceMin ?? '');
 const maxPrice = ref(getFacetsFromURL().priceMax ?? '');
@@ -147,7 +214,7 @@ const resetPriceFilter = () => {
 
 const updateFilter = () => {
   const currentFacets = getFacetsFromURL().facets?.split(',') ?? [];
-  for (const filter of filters) {
+  for (const filter of filters.value) {
     const filterId = typeof filter.id === 'string' ? filter.id : filter.id.toString();
 
     models.value[filterId] = currentFacets.includes(filterId);
@@ -185,3 +252,20 @@ const shouldRenderFacet = computed(() => {
   );
 });
 </script>
+
+<i18n lang="json">
+{
+  "en": {
+    "show-more-options": "Show {count} more options",
+    "show-fewer-options": "Show fewer options",
+    "show-more-options-for": "Show {count} more options for {facet}",
+    "show-fewer-options-for": "Show fewer options for {facet}"
+  },
+  "de": {
+    "show-more-options": "{count} weitere Optionen anzeigen",
+    "show-fewer-options": "Weniger Optionen anzeigen",
+    "show-more-options-for": "{count} weitere Optionen für {facet} anzeigen",
+    "show-fewer-options-for": "Weniger Optionen für {facet} anzeigen"
+  }
+}
+</i18n>
