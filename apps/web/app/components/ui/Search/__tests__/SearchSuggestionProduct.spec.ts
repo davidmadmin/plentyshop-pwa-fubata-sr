@@ -1,6 +1,11 @@
 import { mount } from '@vue/test-utils';
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import type { ItemSearchAutocompleteItem } from '@plentymarkets/shop-api';
 import { UiSearchSuggestionProduct } from '#components';
+
+mockNuxtImport('usePriceFormatter', () => () => ({
+  format: (value: number) => `${value.toFixed(2)} €`,
+}));
 
 describe('<SearchSuggestionProduct />', () => {
   it('should use the secondary color for the product price', () => {
@@ -10,7 +15,13 @@ describe('<SearchSuggestionProduct />', () => {
           image: '',
           imageAlt: '',
           label: 'Test product',
-          price: 10,
+          price: {
+            price: { value: 10, formatted: '10.00 €' },
+          },
+          crossedPrice: null,
+          beforeLabel: '',
+          afterLabel: '',
+          count: 1,
           url: '/test-product',
         } as ItemSearchAutocompleteItem,
       },
