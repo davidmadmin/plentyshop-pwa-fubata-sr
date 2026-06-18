@@ -26,6 +26,10 @@ const sanitizeCssValue = (value: unknown, fallback: string) => {
 export default defineNuxtPlugin({
   name: 'brand-theme',
   setup() {
+    const { $isPreview } = useNuxtApp();
+    const {
+      public: { isPreview: isPreviewConfig },
+    } = useRuntimeConfig();
     const { getSetting: getThemeEnabled } = useSiteSettings('brandThemeEnabled');
     const { getSetting: getTextureEnabled } = useSiteSettings('brandBackgroundTextureEnabled');
     const { getSetting: getPageColor } = useSiteSettings('brandPageColor');
@@ -36,7 +40,10 @@ export default defineNuxtPlugin({
     const { getSetting: getMutedTextColor } = useSiteSettings('brandMutedTextColor');
     const { getSetting: getPriceColor } = useSiteSettings('brandPriceColor');
 
-    const brandThemeEnabled = computed(() => normalizeBooleanSetting(getThemeEnabled(), true));
+    const isEditorMode = computed(() => Boolean(isPreviewConfig) || Boolean($isPreview));
+    const themeConfigured = computed(() => normalizeBooleanSetting(getThemeEnabled(), true));
+    const brandThemeEnabled = computed(() => themeConfigured.value && !isEditorMode.value);
+    const brandThemeEditorPreviewEnabled = computed(() => themeConfigured.value && isEditorMode.value);
     const textureEnabled = computed(() => normalizeBooleanSetting(getTextureEnabled(), true));
 
     const brandVariables = computed(() => {
@@ -71,7 +78,10 @@ export default defineNuxtPlugin({
         class: computed(() =>
           [
             brandThemeEnabled.value ? 'brand-theme-enabled' : 'brand-theme-disabled',
-            brandThemeEnabled.value && textureEnabled.value ? 'brand-theme-texture' : '',
+            brandThemeEditorPreviewEnabled.value ? 'brand-theme-editor-preview' : '',
+            (brandThemeEnabled.value || brandThemeEditorPreviewEnabled.value) && textureEnabled.value
+              ? 'brand-theme-texture'
+              : '',
           ]
             .filter(Boolean)
             .join(' '),
