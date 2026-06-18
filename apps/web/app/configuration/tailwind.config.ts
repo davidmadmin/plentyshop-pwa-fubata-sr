@@ -129,6 +129,16 @@ export default {
           '900': 'rgb(var(--colors-2-header-900) / <alpha-value>)',
           '950': 'rgb(var(--colors-2-header-950) / <alpha-value>)',
         },
+        brand: {
+          page: 'var(--brand-page)',
+          surface: 'var(--brand-surface)',
+          raised: 'var(--brand-surface-raised)',
+          border: 'var(--brand-border)',
+          text: 'var(--brand-text)',
+          muted: 'var(--brand-text-muted)',
+          price: 'var(--brand-price)',
+          success: 'var(--brand-success)',
+        },
       },
       backgroundImage: {
         'editor-hatched': 'repeating-linear-gradient(45deg, #fafafa 0, #fafafa 6px, transparent 6px, transparent 12px)',

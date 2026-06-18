@@ -10,9 +10,13 @@ describe('<SearchSuggestionProduct />', () => {
           image: '',
           imageAlt: '',
           label: 'Test product',
-          price: 10,
+          beforeLabel: '',
+          afterLabel: '',
+          count: 1,
+          price: null,
+          crossedPrice: null,
           url: '/test-product',
-        } as ItemSearchAutocompleteItem,
+        } satisfies ItemSearchAutocompleteItem,
       },
       global: {
         stubs: {
