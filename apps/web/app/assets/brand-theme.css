@@ -819,7 +819,7 @@ html.brand-theme-editor-preview.brand-theme-texture [data-testid='editor-preview
   border-color: var(--brand-border);
 }
 
-:where(html.brand-theme-enabled, html.brand-theme-editor-preview) [data-testid='edit-block-actions'] {
+html.brand-theme-editor-preview [data-testid='editor-preview-container'] [data-testid='edit-block-actions'] {
   background-color: rgba(255, 255, 255, 0.95) !important;
   background-image: none !important;
   border-color: rgba(15, 23, 42, 0.1) !important;
@@ -830,14 +830,14 @@ html.brand-theme-editor-preview.brand-theme-texture [data-testid='editor-preview
     inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
-:where(html.brand-theme-enabled, html.brand-theme-editor-preview) [data-testid='edit-block-actions']:hover {
+html.brand-theme-editor-preview [data-testid='editor-preview-container'] [data-testid='edit-block-actions']:hover {
   box-shadow:
     0 14px 36px -10px rgba(15, 23, 42, 0.3),
     0 6px 14px -4px rgba(15, 23, 42, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
-:where(html.brand-theme-enabled, html.brand-theme-editor-preview) [data-testid='edit-block-actions'] button {
+html.brand-theme-editor-preview [data-testid='editor-preview-container'] [data-testid='edit-block-actions'] button {
   background-color: transparent !important;
   background-image: none !important;
   border-color: transparent !important;
@@ -845,8 +845,12 @@ html.brand-theme-editor-preview.brand-theme-texture [data-testid='editor-preview
   box-shadow: none !important;
 }
 
-:where(html.brand-theme-enabled, html.brand-theme-editor-preview) [data-testid='edit-block-actions'] button:hover,
-:where(html.brand-theme-enabled, html.brand-theme-editor-preview)
+html.brand-theme-editor-preview
+  [data-testid='editor-preview-container']
+  [data-testid='edit-block-actions']
+  button:hover,
+html.brand-theme-editor-preview
+  [data-testid='editor-preview-container']
   [data-testid='edit-block-actions']
   button[aria-label='Drag to reorder block']:hover {
   background-color: rgba(29, 94, 199, 0.1) !important;
@@ -854,7 +858,8 @@ html.brand-theme-editor-preview.brand-theme-texture [data-testid='editor-preview
   box-shadow: 0 2px 8px -2px rgba(29, 94, 199, 0.25) !important;
 }
 
-:where(html.brand-theme-enabled, html.brand-theme-editor-preview)
+html.brand-theme-editor-preview
+  [data-testid='editor-preview-container']
   [data-testid='edit-block-actions']
   [data-testid='delete-block-button']:hover {
   background-color: rgba(204, 51, 51, 0.1) !important;
@@ -862,14 +867,16 @@ html.brand-theme-editor-preview.brand-theme-texture [data-testid='editor-preview
   box-shadow: 0 2px 8px -2px rgba(204, 51, 51, 0.25) !important;
 }
 
-:where(html.brand-theme-enabled, html.brand-theme-editor-preview)
+html.brand-theme-editor-preview
+  [data-testid='editor-preview-container']
   [data-testid='edit-block-actions']
   > span[data-testid='tooltip'] {
   background-color: transparent !important;
   border-color: transparent !important;
 }
 
-:where(html.brand-theme-enabled, html.brand-theme-editor-preview)
+html.brand-theme-editor-preview
+  [data-testid='editor-preview-container']
   [data-testid='edit-block-actions']
   > span:not([data-testid='tooltip']) {
   background-color: rgba(15, 23, 42, 0.1) !important;
