@@ -1,5 +1,5 @@
 <template>
-  <div class="py-2">
+  <div v-if="themeEnabled" class="py-2">
     <div class="flex justify-between mb-2">
       <UiFormLabel class="mb-1">
         {{ getEditorTranslation('label') }}
@@ -25,6 +25,7 @@
 import { SfIconInfo, SfSwitch, SfTooltip } from '@storefront-ui/vue';
 
 const { updateSetting, getSetting } = useSiteSettings('useBrandBackgroundTexture');
+const { enabled: themeEnabled } = useDarkBrandTheme();
 
 const useBrandBackgroundTexture = computed({
   get: () => String(getSetting()) === 'true',
@@ -36,11 +37,11 @@ const useBrandBackgroundTexture = computed({
 {
   "en": {
     "label": "Use background texture",
-    "tooltip": "Adds the configured texture image to the storefront background when the dark brand theme is enabled."
+    "tooltip": "Adds the configured texture image to the storefront background when the custom theme is enabled."
   },
   "de": {
     "label": "Use background texture",
-    "tooltip": "Adds the configured texture image to the storefront background when the dark brand theme is enabled."
+    "tooltip": "Adds the configured texture image to the storefront background when the custom theme is enabled."
   }
 }
 </i18n>

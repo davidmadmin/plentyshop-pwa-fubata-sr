@@ -34,7 +34,10 @@
         id="app-container"
         ref="previewContainerEl"
         :style="appContainerStyle"
-        :class="isMobilePreview ? 'mx-auto bg-white my-auto shadow-md @container' : '@container'"
+        :class="[
+          isMobilePreview ? 'mx-auto bg-white my-auto shadow-md @container' : '@container',
+          { 'dark-brand-theme': darkBrandThemeEnabled },
+        ]"
         data-testid="editor-preview-container"
       >
         <template v-if="isMobilePreview">
@@ -99,6 +102,9 @@ const { getSetting: getEnableDarkBrandTheme } = useSiteSettings('enableDarkBrand
 const { getSetting: getUseBrandBackgroundTexture } = useSiteSettings('useBrandBackgroundTexture');
 const { getSetting: getBrandPageBackgroundColor } = useSiteSettings('brandPageBackgroundColor');
 const { getSetting: getBrandBackgroundTextureImage } = useSiteSettings('brandBackgroundTextureImage');
+const { getSetting: getBrandBackgroundTextureSize } = useSiteSettings('brandBackgroundTextureSize');
+const { getSetting: getBrandBackgroundTextureRepeat } = useSiteSettings('brandBackgroundTextureRepeat');
+const { getSetting: getBrandBackgroundTexturePosition } = useSiteSettings('brandBackgroundTexturePosition');
 
 const { data: productsCatalog } = useProducts();
 
@@ -167,8 +173,9 @@ const appContainerStyle = computed(() => {
 
     if (useDarkBrandTexture.value) {
       style.backgroundImage = `url("${getBrandBackgroundTextureImage()}")`;
-      style.backgroundRepeat = 'repeat';
-      style.backgroundSize = 'auto';
+      style.backgroundRepeat = getBrandBackgroundTextureRepeat() || 'no-repeat';
+      style.backgroundSize = getBrandBackgroundTextureSize() || 'cover';
+      style.backgroundPosition = getBrandBackgroundTexturePosition() || 'center center';
     }
   }
 
@@ -319,4 +326,15 @@ const AddBlockPopoverComponent = defineAsyncComponent(() => import('~/components
 
 <style lang="scss">
 @use '~/assets/style.scss';
+
+.dark-brand-theme .block-wrapper h2,
+.dark-brand-theme .block-wrapper .no-preflight,
+.dark-brand-theme .block-wrapper .no-preflight :where(p, span, div, li, strong, em, b, i),
+.dark-brand-theme .block-wrapper :where(p.font-bold.leading-6.cursor-pointer, p.font-bold.leading-6.cursor-pointer span) {
+  color: #f2f2f2;
+}
+
+.dark-brand-theme .block-wrapper .no-preflight :where(a) {
+  color: #ffffff;
+}
 </style>

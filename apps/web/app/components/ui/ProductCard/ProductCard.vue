@@ -2,7 +2,14 @@
   <div
     class="rounded-md hover:shadow-lg flex flex-col"
     data-testid="product-card"
-    :class="{ 'border border-neutral-200': configuration?.cardBorders }"
+    :class="[
+      darkBrandThemeEnabled ? 'bg-neutral-900/80 text-neutral-100' : '',
+      configuration?.cardBorders
+        ? darkBrandThemeEnabled
+          ? 'border border-neutral-700'
+          : 'border border-neutral-200'
+        : '',
+    ]"
   >
     <div class="relative overflow-hidden">
       <UiBadges
@@ -23,7 +30,7 @@
           <div class="relative w-full aspect-square">
             <div
               v-if="!mainImageLoaded"
-              class="absolute inset-0 rounded-md bg-neutral-100 animate-pulse"
+              :class="['absolute inset-0 rounded-md animate-pulse', darkBrandThemeEnabled ? 'bg-neutral-800' : 'bg-neutral-100']"
               aria-hidden="true"
             />
 
@@ -75,7 +82,12 @@
         <slot name="wishlistButton">
           <WishlistButton
             square
-            class="absolute bottom-0 right-0 mr-2 mb-2 bg-white ring-1 ring-inset ring-neutral-200 !rounded-full"
+            :class="[
+              'absolute bottom-0 right-0 mr-2 mb-2 !rounded-full',
+              darkBrandThemeEnabled
+                ? '!bg-neutral-800 !text-neutral-100 hover:!bg-neutral-700 hover:!text-white active:!bg-neutral-600 active:!text-white !ring-1 !ring-inset !ring-neutral-700 hover:!ring-neutral-500 active:!ring-neutral-400'
+                : 'bg-white ring-1 ring-inset ring-neutral-200',
+            ]"
             :product="product"
           />
         </slot>
@@ -83,19 +95,25 @@
     </div>
 
     <div
-      class="p-2 border-t border-neutral-200 typography-text-sm flex flex-col flex-auto"
-      :class="{
-        'items-center': configuration?.contentAlignment === 'center',
-        'items-end': configuration?.contentAlignment === 'right',
-        'items-start': configuration?.contentAlignment === 'left',
-      }"
+      class="p-2 border-t typography-text-sm flex flex-col flex-auto"
+      :class="[
+        darkBrandThemeEnabled ? 'border-neutral-700' : 'border-neutral-200',
+        {
+          'items-center': configuration?.contentAlignment === 'center',
+          'items-end': configuration?.contentAlignment === 'right',
+          'items-start': configuration?.contentAlignment === 'left',
+        },
+      ]"
     >
       <template v-for="key in configuration?.fieldsOrder" :key="key">
         <template v-if="key === 'title' && configuration?.fields?.title">
           <UiLink
             :tag="NuxtLink"
             :to="productPath"
-            class="no-underline"
+            :class="[
+              'no-underline',
+              darkBrandThemeEnabled ? '!text-neutral-100 hover:!text-white active:!text-neutral-200' : '',
+            ]"
             variant="secondary"
             data-testid="productcard-name"
           >
@@ -105,7 +123,7 @@
         <template v-if="key === 'manufacturer' && configuration?.fields?.manufacturer">
           <div
             v-if="manufacturer"
-            class="mb-1 typography-text-xs text-neutral-500"
+            :class="['mb-1 typography-text-xs', darkBrandThemeEnabled ? 'text-neutral-400' : 'text-neutral-500']"
             data-testid="productcard-manufacturer"
           >
             {{ manufacturer.externalName }}
@@ -120,7 +138,10 @@
         <template v-if="key === 'previewText' && configuration?.fields?.previewText">
           <div
             v-if="shortDescription"
-            class="block py-2 font-normal typography-text-xs text-neutral-700 text-justify whitespace-pre-line break-words"
+            :class="[
+              'block py-2 font-normal typography-text-xs text-justify whitespace-pre-line break-words',
+              darkBrandThemeEnabled ? 'text-neutral-300' : 'text-neutral-700',
+            ]"
           >
             <div class="line-clamp-3 no-preflight" v-html="shortDescription" />
           </div>
@@ -132,7 +153,10 @@
           </div>
           <div class="flex flex-col-reverse items-start @md:flex-row @md:items-center mt-auto">
             <span
-              class="block pb-2 font-bold typography-text-sm text-secondary-600"
+              :class="[
+                'block pb-2 font-bold typography-text-sm',
+                darkBrandThemeEnabled ? 'text-neutral-50' : 'text-secondary-600',
+              ]"
               data-testid="product-card-vertical-price"
             >
               <span v-if="showFromText" class="mr-1">{{ t('account.ordersAndReturns.orderDetails.priceFrom') }}</span>
@@ -151,7 +175,10 @@
           <UiButton
             v-if="canAddFromCategory"
             size="sm"
-            class="min-w-[80px] w-fit"
+            :class="[
+              'min-w-[80px] w-fit',
+              darkBrandThemeEnabled ? '!bg-neutral-800 hover:!bg-neutral-700 active:!bg-neutral-600 !text-neutral-50' : '',
+            ]"
             data-testid="add-to-basket-short"
             :disabled="loading"
             :variant="configuration?.addToCartStyle || 'primary'"
@@ -170,7 +197,10 @@
             :tag="NuxtLink"
             :to="productPath"
             size="sm"
-            class="w-fit"
+            :class="[
+              'w-fit',
+              darkBrandThemeEnabled ? '!bg-neutral-800 hover:!bg-neutral-700 active:!bg-neutral-600 !text-neutral-50' : '',
+            ]"
           >
             <span>{{ t('common.actions.showOptions') }}</span>
           </UiButton>
@@ -230,6 +260,7 @@ const { send } = useNotification();
 const loading = ref(false);
 const config = useRuntimeConfig();
 const useTagsOnCategoryPage = config.public.useTagsOnCategoryPage;
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 const name = computed(
   () => productGetters.getName(product.value) + productGetters.getGroupedAttributesString(product.value),
 );

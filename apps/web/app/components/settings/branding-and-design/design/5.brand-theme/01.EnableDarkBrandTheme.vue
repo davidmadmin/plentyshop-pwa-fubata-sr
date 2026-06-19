@@ -35,12 +35,12 @@ const enableDarkBrandTheme = computed({
 <i18n lang="json">
 {
   "en": {
-    "label": "Enable dark brand theme",
-    "tooltip": "Turns on the dark brand theme for the storefront. The editor interface keeps its default styling."
+    "label": "Enable theme",
+    "tooltip": "Enables the custom storefront theme. This overwrites many shop styles such as page background, product cards, filters, buybox, reviews, and related dark-theme surfaces. The editor interface keeps its default styling."
   },
   "de": {
-    "label": "Enable dark brand theme",
-    "tooltip": "Turns on the dark brand theme for the storefront. The editor interface keeps its default styling."
+    "label": "Enable theme",
+    "tooltip": "Enables the custom storefront theme. This overwrites many shop styles such as page background, product cards, filters, buybox, reviews, and related dark-theme surfaces. The editor interface keeps its default styling."
   }
 }
 </i18n>

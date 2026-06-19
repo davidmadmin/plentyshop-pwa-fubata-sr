@@ -1,7 +1,10 @@
 <template>
   <div v-if="parentCategory || categoryItems?.length" class="category-tree">
     <div
-      class="py-2 px-4 mb-4 bg-primary-50/50 typography-headline-6 font-bold text-neutral-900 uppercase tracking-widest rounded-none select-none"
+      :class="[
+        'py-2 px-4 mb-4 typography-headline-6 font-bold uppercase tracking-widest rounded-none select-none',
+        darkBrandThemeEnabled ? 'bg-neutral-800 text-neutral-100' : 'bg-primary-50/50 text-neutral-900',
+      ]"
       data-testid="category-tree"
     >
       {{ t('common.labels.category') }}
@@ -13,7 +16,7 @@
         :href="parentCategoryHref"
         :count="breadcrumbGetters.getItemCount(parentCategory)"
       >
-        <SfIconArrowBack size="sm" class="text-neutral-500 mr-2" />
+        <SfIconArrowBack size="sm" :class="[darkBrandThemeEnabled ? 'text-neutral-300' : 'text-neutral-500', 'mr-2']" />
       </CategoryTreeItem>
     </template>
     <ul v-if="categoryItems?.length" class="mb-4 @md:mt-2" data-testid="categories">
@@ -35,6 +38,7 @@ import type { CategoryTreeProps } from '~/components/CategoryTree/types';
 import { SfIconArrowBack } from '@storefront-ui/vue';
 
 const props = defineProps<CategoryTreeProps>();
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 const { t } = useI18n();
 const { resolvePathTrailingSlash } = useUrlTrailingSlash();
 

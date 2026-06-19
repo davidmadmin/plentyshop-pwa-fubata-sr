@@ -2,7 +2,9 @@
   <div class="flex justify-center @lg:justify-start mb-4 @lg:mb-0" data-testid="average-section">
     <div class="@lg:flex my-2">
       <div class="@lg:w-1/2 flex flex-col @lg:mr-8">
-        <p class="text-center text-sm" data-testid="average-info">{{ t('product.averageRating') }}</p>
+        <p :class="['text-center text-sm', { 'text-[#d4d4d4]': darkBrandThemeEnabled }]" data-testid="average-info">
+          {{ t('product.averageRating') }}
+        </p>
         <div class="flex justify-center">
           <SfRating
             class="pb-2"
@@ -11,16 +13,19 @@
             :value="reviewAverageStars || reviewAverageText"
             :half-increment="true"
           />
-          <h3 class="font-bold text-xl ml-2">
+          <h3 :class="['font-bold text-xl ml-2', { 'text-[#f7f7f7]': darkBrandThemeEnabled }]">
             {{ reviewAverageText }}
           </h3>
         </div>
-        <p class="text-xs text-center" data-testid="review-count">
+        <p :class="['text-xs text-center', { 'text-[#d4d4d4]': darkBrandThemeEnabled }]" data-testid="review-count">
           {{ t('product.basedOnRatings', { count: totalReviews }) }}
         </p>
         <UiButton
           data-testid="add-review-button"
-          class="mt-2 mb-4 mx-auto"
+          :class="[
+            'mt-2 mb-4 mx-auto',
+            darkBrandThemeEnabled ? '!bg-[#262626] hover:!bg-[#303030] active:!bg-[#3a3a3a] !text-[#f7f7f7]' : '',
+          ]"
           size="base"
           @click="openReviewModal(defaults.DEFAULT_REVIEW_MODAL_TYPES.createReview)"
         >
@@ -29,7 +34,11 @@
       </div>
 
       <div class="flex flex-col">
-        <div v-for="(proportionalRating, key) in ratingPercentages" :key="key" class="flex items-center">
+        <div
+          v-for="(proportionalRating, key) in ratingPercentages"
+          :key="key"
+          :class="['flex items-center', { 'text-[#d4d4d4]': darkBrandThemeEnabled }]"
+        >
           <p class="w-4 text-center">{{ 5 - key }}</p>
           <SfIconStarFilled class="mx-2 pb-1 text-warning-500" size="base" />
           <SfProgressLinear
@@ -53,6 +62,7 @@ import { defaults } from '~/composables';
 
 const props = defineProps<ReviewStatisticsProps>();
 const { currentProduct } = useProducts();
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 
 const product = computed(() => props.product || currentProduct.value);
 const productId = computed(() => {

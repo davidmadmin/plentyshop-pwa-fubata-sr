@@ -1,5 +1,5 @@
 <template>
-  <div class="py-2">
+  <div v-if="themeEnabled" class="py-2">
     <div class="flex justify-between mb-2">
       <UiFormLabel>{{ getEditorTranslation('label') }}</UiFormLabel>
       <SfTooltip :label="getEditorTranslation('tooltip')" :placement="'top'" :show-arrow="true" class="ml-2 z-dropdown">
@@ -31,6 +31,7 @@
 import { SfIconInfo, SfInput, SfTooltip } from '@storefront-ui/vue';
 
 const { updateSetting, getSetting } = useSiteSettings('brandPageBackgroundColor');
+const { enabled: themeEnabled } = useDarkBrandTheme();
 
 const brandPageBackgroundColor = computed({
   get: () => getSetting(),

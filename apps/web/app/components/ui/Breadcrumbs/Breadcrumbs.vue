@@ -1,7 +1,10 @@
 <template>
-  <nav data-testid="breadcrumbs" class="inline-flex items-center text-sm font-normal">
+  <nav
+    data-testid="breadcrumbs"
+    :class="['inline-flex items-center text-sm font-normal', { 'text-neutral-300': darkBrandThemeEnabled }]"
+  >
     <ol class="flex w-auto leading-none group @md:flex-wrap">
-      <li class="flex items-center @sm:hidden text-neutral-500 z-overlap">
+      <li :class="['flex items-center @sm:hidden z-overlap', darkBrandThemeEnabled ? 'text-neutral-300' : 'text-neutral-500']">
         <NuxtLazyHydrate :on-interaction="['click', 'touchstart']">
           <SfDropdown
             v-model="dropdownOpened"
@@ -12,7 +15,12 @@
           >
             <template #trigger>
               <UiButton
-                class="relative w-5 h-5 !p-0 rounded-sm outline-secondary-600 hover:bg-transparent active:bg-transparent"
+                :class="[
+                  'relative w-5 h-5 !p-0 rounded-sm outline-secondary-600',
+                  darkBrandThemeEnabled
+                    ? 'hover:!bg-neutral-800/80 active:!bg-neutral-700/80'
+                    : 'hover:bg-transparent active:bg-transparent',
+                ]"
                 :aria-label="t('common.navigation.breadcrumbsDropdown')"
                 variant="tertiary"
                 square
@@ -22,18 +30,33 @@
                 <template #prefix>
                   <SfIconMoreHoriz
                     size="sm"
-                    class="text-neutral-500 hover:text-primary-500 active:text-primary-800 active:bg-transparent"
+                    :class="
+                      darkBrandThemeEnabled
+                        ? 'text-neutral-300 hover:text-neutral-100 active:text-white active:bg-transparent'
+                        : 'text-neutral-500 hover:text-primary-500 active:text-primary-800 active:bg-transparent'
+                    "
                   />
                 </template>
               </UiButton>
             </template>
-            <ol class="px-4 py-2 rounded-md shadow-md border-neutral-100 bg-white" data-testid="breadcrumbs-dropdown">
+            <ol
+              :class="[
+                'px-4 py-2 rounded-md shadow-md',
+                darkBrandThemeEnabled ? 'border border-neutral-700 bg-neutral-900 text-neutral-200' : 'border-neutral-100 bg-white',
+              ]"
+              data-testid="breadcrumbs-dropdown"
+            >
               <li v-for="item in breadcrumbs" :key="item.name" class="py-2 last-of-type:hidden">
                 <UiLink
                   :tag="NuxtLink"
                   :to="localePath(item.link)"
                   variant="secondary"
-                  class="leading-5 no-underline text-inherit hover:underline active:underline whitespace-nowrap outline-secondary-600"
+                  :class="[
+                    'leading-5 no-underline hover:underline active:underline whitespace-nowrap outline-secondary-600',
+                    darkBrandThemeEnabled
+                      ? '!text-neutral-200 hover:!text-neutral-50 active:!text-white'
+                      : 'text-inherit',
+                  ]"
                 >
                   {{ item.name }}
                 </UiLink>
@@ -45,14 +68,22 @@
       <li
         v-for="(item, index) in breadcrumbs"
         :key="item.name"
-        class="peer hidden @sm:flex items-center peer-[:nth-of-type(even)]:before:content-['/'] peer-[:nth-of-type(even)]:before:px-2 peer-[:nth-of-type(even)]:before:leading-5 last-of-type:flex last-of-type:before:font-normal last-of-type:before:text-neutral-500 text-neutral-500 last-of-type:text-neutral-900 last-of-type:font-medium"
+        :class="[
+          'peer hidden @sm:flex items-center peer-[:nth-of-type(even)]:before:content-[\'/\'] peer-[:nth-of-type(even)]:before:px-2 peer-[:nth-of-type(even)]:before:leading-5 last-of-type:flex last-of-type:before:font-normal last-of-type:before:text-neutral-500 last-of-type:font-medium',
+          darkBrandThemeEnabled ? 'text-neutral-400 last-of-type:text-neutral-100' : 'text-neutral-500 last-of-type:text-neutral-900',
+        ]"
       >
         <UiLink
           v-if="index < breadcrumbs.length - 1"
           :tag="NuxtLink"
           :to="localePath(item.link)"
           variant="secondary"
-          class="leading-5 no-underline hover:underline active:underline whitespace-nowrap outline-secondary-600 text-inherit"
+          :class="[
+            'leading-5 no-underline hover:underline active:underline whitespace-nowrap outline-secondary-600',
+            darkBrandThemeEnabled
+              ? '!text-neutral-300 hover:!text-neutral-100 active:!text-white'
+              : 'text-inherit',
+          ]"
         >
           {{ item.name }}
         </UiLink>
@@ -72,6 +103,7 @@ defineProps<BreadcrumbsProps>();
 
 const localePath = useLocalizedPath();
 const dropdownOpened = ref(false);
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 const close = () => {
   dropdownOpened.value = false;
 };
