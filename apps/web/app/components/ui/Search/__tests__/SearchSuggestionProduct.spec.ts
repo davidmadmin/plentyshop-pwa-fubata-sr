@@ -1,6 +1,22 @@
 import { mount } from '@vue/test-utils';
-import type { ItemSearchAutocompleteItem } from '@plentymarkets/shop-api';
+import type { ItemSearchAutocompleteItem, ItemSearchAutocompletePrice } from '@plentymarkets/shop-api';
 import { UiSearchSuggestionProduct } from '#components';
+
+const makePrice = (value: number): ItemSearchAutocompletePrice => ({
+  price: { value, formatted: `${value}` },
+  unitPrice: { value, formatted: `${value}` },
+  basePrice: '',
+  baseLot: null,
+  baseUnit: null,
+  baseSinglePrice: null,
+  minimumOrderQuantity: 1,
+  contactClassDiscount: { percent: 0, amount: 0 },
+  categoryDiscount: { percent: 0, amount: 0 },
+  currency: 'EUR',
+  lowestPrice: { value, formatted: `${value}` },
+  vat: { id: 0, value: 0 },
+  isNet: false,
+});
 
 describe('<SearchSuggestionProduct />', () => {
   it('should use the secondary color for the product price', () => {
@@ -10,9 +26,13 @@ describe('<SearchSuggestionProduct />', () => {
           image: '',
           imageAlt: '',
           label: 'Test product',
-          price: 10,
+          price: makePrice(10),
+          crossedPrice: null,
+          beforeLabel: '',
+          afterLabel: '',
+          count: 0,
           url: '/test-product',
-        } as ItemSearchAutocompleteItem,
+        } satisfies ItemSearchAutocompleteItem,
       },
       global: {
         stubs: {

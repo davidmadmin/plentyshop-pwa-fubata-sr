@@ -1,7 +1,7 @@
-import type { CancellationFormParams } from '@plentymarkets/shop-api';
-
 export interface UseCancellationFormState {
   loading: boolean;
 }
 
-export type SubmitCancellation = (params: CancellationFormParams) => Promise<string | null>;
+type SubmitCancellationParams = Parameters<ReturnType<typeof useSdk>['plentysystems']['doSubmitCancellation']>[0];
+
+export type SubmitCancellation = (params: SubmitCancellationParams) => Promise<string | null>;
