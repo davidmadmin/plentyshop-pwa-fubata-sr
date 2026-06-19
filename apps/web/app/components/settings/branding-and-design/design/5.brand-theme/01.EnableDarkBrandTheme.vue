@@ -28,7 +28,7 @@ const { updateSetting, getSetting } = useSiteSettings('enableDarkBrandTheme');
 
 const enableDarkBrandTheme = computed({
   get: () => String(getSetting()) === 'true',
-  set: (value) => updateSetting(value.toString()),
+  set: (value) => updateSetting(value),
 });
 </script>
 

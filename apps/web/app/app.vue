@@ -26,7 +26,6 @@
       <Body
         class="font-body bg-editor-body-bg"
         :class="[bodyClass, { 'overflow-hidden': clientPreview }]"
-        :style="currentFont"
       />
       <UiNotifications />
       <VitePwaManifest />
@@ -34,20 +33,7 @@
       <div
         id="app-container"
         ref="previewContainerEl"
-        :style="
-          isMobilePreview
-            ? {
-                width: previewWidth,
-                maxWidth: '100%',
-                transform: 'translateZ(0)',
-                height: '99%',
-                overflow: 'clip',
-                display: 'flex',
-                flexDirection: 'column',
-                '--viewport-height': '90dvh',
-              }
-            : undefined
-        "
+        :style="appContainerStyle"
         :class="isMobilePreview ? 'mx-auto bg-white my-auto shadow-md @container' : '@container'"
         data-testid="editor-preview-container"
       >
@@ -109,6 +95,10 @@ const { getSetting: getMetaKeywords } = useSiteSettings('metaKeywords');
 const { getSetting: getRobots } = useSiteSettings('robots');
 const { getSetting: getPrimaryColor } = useSiteSettings('primaryColor');
 const { getSetting: customAssetsSafeMode } = useSiteSettings('customAssetsSafeMode');
+const { getSetting: getEnableDarkBrandTheme } = useSiteSettings('enableDarkBrandTheme');
+const { getSetting: getUseBrandBackgroundTexture } = useSiteSettings('useBrandBackgroundTexture');
+const { getSetting: getBrandPageBackgroundColor } = useSiteSettings('brandPageBackgroundColor');
+const { getSetting: getBrandBackgroundTextureImage } = useSiteSettings('brandBackgroundTextureImage');
 
 const { data: productsCatalog } = useProducts();
 
@@ -162,6 +152,42 @@ const fav = ref(getFavicon());
 const themeColor = ref(getPrimaryColor());
 
 const cssAssets = computed(() => (isSafeMode.value ? [] : getAssetsOfType('css')));
+
+const darkBrandThemeEnabled = computed(() => String(getEnableDarkBrandTheme()) === 'true');
+const useDarkBrandTexture = computed(() => String(getUseBrandBackgroundTexture()) === 'true');
+
+const appContainerStyle = computed(() => {
+  const style: Record<string, string> = {
+    fontFamily: `'${currentFont.value}', sans-serif`,
+  };
+
+  if (darkBrandThemeEnabled.value) {
+    style.backgroundColor = getBrandPageBackgroundColor();
+    style.minHeight = clientPreview.value ? 'auto' : '100vh';
+
+    if (useDarkBrandTexture.value) {
+      style.backgroundImage = `url("${getBrandBackgroundTextureImage()}")`;
+      style.backgroundRepeat = 'repeat';
+      style.backgroundSize = 'auto';
+    }
+  }
+
+  if (isMobilePreview.value) {
+    return {
+      ...style,
+      width: previewWidth.value,
+      maxWidth: '100%',
+      transform: 'translateZ(0)',
+      height: '99%',
+      overflow: 'clip',
+      display: 'flex',
+      flexDirection: 'column',
+      '--viewport-height': '90dvh',
+    };
+  }
+
+  return style;
+});
 
 const jsHeadAssets = computed(() =>
   isSafeMode.value

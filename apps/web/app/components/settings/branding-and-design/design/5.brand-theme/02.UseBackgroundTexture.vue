@@ -28,7 +28,7 @@ const { updateSetting, getSetting } = useSiteSettings('useBrandBackgroundTexture
 
 const useBrandBackgroundTexture = computed({
   get: () => String(getSetting()) === 'true',
-  set: (value) => updateSetting(value.toString()),
+  set: (value) => updateSetting(value),
 });
 </script>
 

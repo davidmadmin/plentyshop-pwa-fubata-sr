@@ -56,7 +56,7 @@ export const useSiteConfiguration: UseSiteConfigurationReturn = () => {
 
     document.head.appendChild(link);
 
-    state.value.currentFont = `font-family: '${fontName}'`;
+    state.value.currentFont = fontName;
   };
 
   const openDrawerWithView = (view: DrawerView, block?: Block) => {

@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-const defaultTextureImage = '/_nuxt-plenty/images/brand-theme/dark-texture.png';
+const defaultTextureImage = '/_nuxt-plenty/images/brand-theme/dark-texture.avif';
 
 const { updateSetting, getSetting } = useSiteSettings('brandBackgroundTextureImage');
 
