@@ -1,15 +1,26 @@
 <template>
   <SfAccordionItem v-if="facet" v-model="open">
     <template #summary>
-      <div class="flex justify-between py-1 px-4 mb-2 select-none bg-primary-50/50">
+      <div
+        :class="[
+          'flex justify-between py-1 px-4 mb-2 select-none',
+          darkBrandThemeEnabled ? 'bg-neutral-800 text-neutral-100' : 'bg-primary-50/50',
+        ]"
+      >
         <div class="py-1 rounded-none uppercase typography-headline-6 font-bold tracking-widest select-none">
           {{ facetGetters.getName(facet) }}
         </div>
-        <SfIconChevronLeft :class="['text-neutral-500', open ? 'rotate-90' : '-rotate-90']" />
+        <SfIconChevronLeft :class="[darkBrandThemeEnabled ? 'text-neutral-300' : 'text-neutral-500', open ? 'rotate-90' : '-rotate-90']" />
       </div>
     </template>
     <div v-if="facetGetters.getType(facet) === 'feedback'">
-      <SfListItem v-for="(filter, index) in sortedReviews(facet)" :key="index" tag="label" class="mb-3" size="sm">
+      <SfListItem
+        v-for="(filter, index) in sortedReviews(facet)"
+        :key="index"
+        tag="label"
+        :class="['mb-3', darkBrandThemeEnabled ? 'text-neutral-200 hover:bg-neutral-800/80 active:bg-neutral-700' : '']"
+        size="sm"
+      >
         <div class="flex items-center space-x-2">
           <span class="pt-1 flex items-center">
             <SfCheckbox :id="filter.id" v-model="models[filter.id]" :value="filter" @change="facetChange" />
@@ -40,20 +51,36 @@
     <form v-else-if="facetGetters.getType(facet) === 'price'" class="mb-4 px-4" @submit.prevent="updatePriceFilter">
       <div class="mb-3">
         <label for="min">
-          <UiFormLabel class="text-start">{{ t('common.labels.min') }}</UiFormLabel>
-          <SfInput id="min" v-model="minPrice" :placeholder="t('common.labels.min')" />
+          <UiFormLabel :class="['text-start', { 'text-neutral-200': darkBrandThemeEnabled }]">
+            {{ t('common.labels.min') }}
+          </UiFormLabel>
+          <SfInput
+            id="min"
+            v-model="minPrice"
+            :class="darkBrandThemeEnabled ? darkInputClass : ''"
+            :wrapper-class="darkBrandThemeEnabled ? darkInputWrapperClass : ''"
+            :placeholder="t('common.labels.min')"
+          />
         </label>
       </div>
       <div class="mb-3">
         <label for="max">
-          <UiFormLabel class="text-start">{{ t('common.labels.max') }}</UiFormLabel>
-          <SfInput id="max" v-model="maxPrice" :placeholder="t('common.labels.max')" />
+          <UiFormLabel :class="['text-start', { 'text-neutral-200': darkBrandThemeEnabled }]">
+            {{ t('common.labels.max') }}
+          </UiFormLabel>
+          <SfInput
+            id="max"
+            v-model="maxPrice"
+            :class="darkBrandThemeEnabled ? darkInputClass : ''"
+            :wrapper-class="darkBrandThemeEnabled ? darkInputWrapperClass : ''"
+            :placeholder="t('common.labels.max')"
+          />
         </label>
       </div>
       <div class="flex">
         <UiButton
           type="submit"
-          class="w-full mr-3 h-10"
+          :class="['w-full mr-3 h-10', darkBrandThemeEnabled ? darkApplyButtonClass : '']"
           :disabled="minPrice.length === 0 && maxPrice.length === 0"
           variant="secondary"
         >
@@ -64,7 +91,7 @@
         </UiButton>
         <UiButton
           type="reset"
-          class="h-10"
+          :class="['h-10', darkBrandThemeEnabled ? darkResetButtonClass : '']"
           variant="secondary"
           :aria-label="t('common.actions.clear')"
           @click="resetPriceFilter"
@@ -81,7 +108,12 @@
         tag="label"
         size="sm"
         :data-testid="'category-filter-' + index"
-        class="px-1.5 bg-transparent hover:bg-transparent"
+        :class="[
+          'px-1.5',
+          darkBrandThemeEnabled
+            ? 'text-neutral-200 bg-transparent hover:bg-neutral-800/80 active:bg-neutral-700'
+            : 'bg-transparent hover:bg-transparent',
+        ]"
       >
         <template #prefix>
           <SfCheckbox
@@ -124,6 +156,16 @@ const open = ref(true);
 const props = defineProps<FilterProps>();
 const filters = facetGetters.getFilters(props.facet ?? ({} as FilterGroup)) as Filter[];
 const models = ref({} as Filters);
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
+
+const darkInputClass =
+  '!bg-neutral-900 !text-neutral-100 !ring-neutral-700 placeholder:!text-neutral-500 hover:!ring-neutral-500 active:!ring-neutral-400 focus-within:!ring-neutral-400';
+const darkInputWrapperClass =
+  '!bg-neutral-900 !text-neutral-100 !ring-neutral-700 hover:!ring-neutral-500 active:!ring-neutral-400 focus-within:!ring-neutral-400 !shadow-none';
+const darkApplyButtonClass =
+  '!bg-neutral-800 !text-neutral-100 !ring-neutral-700 hover:!bg-neutral-700 hover:!ring-neutral-500 active:!bg-neutral-600 disabled:!bg-neutral-800/50 disabled:!text-neutral-500 disabled:!ring-neutral-700 disabled:!shadow-none';
+const darkResetButtonClass =
+  '!bg-neutral-900 !text-neutral-300 !ring-neutral-700 hover:!bg-neutral-800 hover:!text-neutral-100 hover:!ring-neutral-500 active:!bg-neutral-700';
 
 // Price
 const minPrice = ref(getFacetsFromURL().priceMin ?? '');

@@ -12,7 +12,7 @@ export interface UseSiteSettingsState {
   loading: boolean;
 }
 
-export type UpdateSetting = (value: string) => void;
+export type UpdateSetting = (value: SettingValue) => void;
 export type SetSettingsInitialData = (settings: Setting[]) => void;
 export type GetSetting = () => string;
 export type GetJsonSetting = () => string[];

@@ -81,6 +81,14 @@ export default {
   verticalBlockSize: process.env.NUXT_PUBLIC_VERTICAL_BLOCK_SIZE || 'm',
   horizontalBlockSize: process.env.NUXT_PUBLIC_HORIZONTAL_BLOCK_SIZE || 's',
   primaryColor: process.env.NUXT_PUBLIC_PRIMARY_COLOR || '#062633',
+  enableDarkBrandTheme: process.env.NUXT_PUBLIC_ENABLE_DARK_BRAND_THEME === 'true',
+  useBrandBackgroundTexture: process.env.NUXT_PUBLIC_USE_BRAND_BACKGROUND_TEXTURE !== 'false',
+  brandPageBackgroundColor: process.env.NUXT_PUBLIC_BRAND_PAGE_BACKGROUND_COLOR || '#050505',
+  brandBackgroundTextureImage:
+    process.env.NUXT_PUBLIC_BRAND_BACKGROUND_TEXTURE_IMAGE || '/_nuxt-plenty/images/brand-theme/dark-texture.avif',
+  brandBackgroundTextureSize: process.env.NUXT_PUBLIC_BRAND_BACKGROUND_TEXTURE_SIZE || 'cover',
+  brandBackgroundTextureRepeat: process.env.NUXT_PUBLIC_BRAND_BACKGROUND_TEXTURE_REPEAT || 'no-repeat',
+  brandBackgroundTexturePosition: process.env.NUXT_PUBLIC_BRAND_BACKGROUND_TEXTURE_POSITION || 'center center',
   defaultSortingOption: process.env.NUXT_PUBLIC_DEFAULT_SORTING_OPTION ?? 'texts.name1_asc',
   defaultSortingSearch: process.env.NUXT_PUBLIC_DEFAULT_SORTING_SEARCH ?? 'item.score',
   availableSortingOptions:

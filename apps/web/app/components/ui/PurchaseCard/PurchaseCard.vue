@@ -1,6 +1,16 @@
 <template>
   <form
-    :class="{ '@md:shadow-lg': configuration?.dropShadow, '@md:border @md:border-neutral-100': configuration?.borders }"
+    :class="[
+      configuration?.dropShadow ? '@md:shadow-lg' : '',
+      configuration?.borders
+        ? darkBrandThemeEnabled
+          ? '@md:border @md:border-neutral-700'
+          : '@md:border @md:border-neutral-100'
+        : '',
+      darkBrandThemeEnabled
+        ? 'bg-neutral-950/85 text-neutral-100 [&_a]:!text-neutral-200 hover:[&_a]:!text-neutral-50 [&_label]:!text-neutral-300 [&_select]:!bg-neutral-900 [&_select]:!text-neutral-100 [&_input]:!bg-neutral-900 [&_input]:!text-neutral-100 [&_table]:!text-neutral-100 [&_th]:!text-neutral-200 [&_td]:!text-neutral-200'
+        : '',
+    ]"
     :style="inlineStyle"
     class="@md:rounded-md"
     data-testid="purchase-card"
@@ -19,7 +29,10 @@
               />
             </template>
             <template v-if="key === 'itemName' && configuration?.fields.itemName">
-              <h1 class="font-bold typography-headline-4 break-word" data-testid="product-name">
+              <h1
+                :class="['font-bold typography-headline-4 break-word', { 'text-neutral-50': darkBrandThemeEnabled }]"
+                data-testid="product-name"
+              >
                 {{ productGetters.getName(product) }}
               </h1>
             </template>
@@ -62,9 +75,16 @@
                   :value="reviewGetters.getAverageRating(reviewAverage, 'half')"
                   size="xs"
                 />
-                <SfCounter class="ml-1" size="xs">{{ reviewGetters.getTotalReviews(reviewAverage) }}</SfCounter>
+                <SfCounter :class="['ml-1', { 'text-neutral-300': darkBrandThemeEnabled }]" size="xs">
+                  {{ reviewGetters.getTotalReviews(reviewAverage) }}
+                </SfCounter>
                 <UiButton
-                  class="ml-2 text-xs text-neutral-500 cursor-pointer"
+                  :class="[
+                    'ml-2 text-xs cursor-pointer',
+                    darkBrandThemeEnabled
+                      ? '!text-neutral-300 hover:!text-neutral-50 active:!text-white'
+                      : 'text-neutral-500',
+                  ]"
                   data-testid="show-reviews"
                   variant="tertiary"
                   @click="scrollToReviews"
@@ -86,13 +106,21 @@
               <div
                 :class="{ 'justify-center': configuration?.wishlistSize === 'large' }"
                 class="flex items-center mt-2"
-              >
+                >
                 <WishlistButton
-                  :class="{
-                    'mr-2 mb-2 bg-white': viewport.isLessThan('lg'),
-                    'w-full': configuration?.wishlistSize === 'large',
-                    '!p-0 hover:bg-transparent active:bg-transparent': configuration?.wishlistSize === 'small',
-                  }"
+                  :class="[
+                    viewport.isLessThan('lg')
+                      ? darkBrandThemeEnabled
+                        ? 'mr-2 mb-2 !bg-neutral-800 !text-neutral-100 hover:!bg-neutral-700 active:!bg-neutral-600'
+                        : 'mr-2 mb-2 bg-white'
+                      : '',
+                    configuration?.wishlistSize === 'large' ? 'w-full' : '',
+                    configuration?.wishlistSize === 'small'
+                      ? darkBrandThemeEnabled
+                        ? '!p-0 hover:!bg-transparent active:!bg-transparent !text-neutral-200 hover:!text-neutral-50'
+                        : '!p-0 hover:bg-transparent active:bg-transparent'
+                      : '',
+                  ]"
                   :product="product"
                   :quantity="quantitySelectorValue"
                   :square="viewport.isLessThan('lg')"
@@ -152,7 +180,12 @@
                   >
                     <UiButton
                       :disabled="loading || !productGetters.isSalable(product)"
-                      class="w-full h-full"
+                      :class="[
+                        'w-full h-full',
+                        darkBrandThemeEnabled
+                          ? '!bg-neutral-800 hover:!bg-neutral-700 active:!bg-neutral-600 !text-neutral-50'
+                          : '',
+                      ]"
                       data-testid="add-to-cart"
                       size="lg"
                       type="submit"
@@ -170,14 +203,17 @@
                   </SfTooltip>
                 </div>
 
-                <div class="mt-4 typography-text-xs flex gap-1">
+                <div :class="['mt-4 typography-text-xs flex gap-1', { 'text-neutral-300': darkBrandThemeEnabled }]">
                   <span>{{ t('common.labels.asterisk') }}</span>
                   <span>{{ showNetPrices ? t('product.priceExclVAT') : t('product.priceInclVAT') }}</span>
                   <i18n-t keypath="shipping.excludedLabel" scope="global">
                     <template #shipping>
                       <UiLink
                         :href="localePath(paths.shipping)"
-                        class="focus:outline focus:outline-offset-2 focus:outline-2 outline-secondary-600 rounded"
+                        :class="[
+                          'focus:outline focus:outline-offset-2 focus:outline-2 outline-secondary-600 rounded',
+                          darkBrandThemeEnabled ? '!text-neutral-100 hover:!text-white' : '',
+                        ]"
                         target="_blank"
                       >
                         {{ t('common.labels.delivery') }}
@@ -318,6 +354,7 @@ const { reviewArea } = useProductReviews(Number(productGetters.getId(props?.prod
 const { getSetting: getNotifyMeSetting } = useSiteSettings('showNotifyMe');
 const showNotifyMe = computed(() => getNotifyMeSetting().toString() === 'true');
 const localePath = useLocalePath();
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 
 const inlineStyle = computed(() => {
   const layout = props?.configuration?.layout || ({} as PriceCardPadding);

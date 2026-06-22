@@ -1,15 +1,13 @@
 <template>
   <div :style="inlineStyle" data-testid="category-data">
-    <template
-      v-if="props.content.displayCategoryImage === 'off' || (!imageUrl && props.content.displayCategoryImage !== 'off')"
-    >
+    <template v-if="displayCategoryImage === 'off' || (!imageUrl && displayCategoryImage !== 'off')">
       <div
         v-if="shouldShowTextBlock"
         data-testid="text-card"
         :class="['w-full']"
         :style="{
-          color: props.content.text.color,
-          backgroundColor: props.content.text.bgColor,
+          color: text.color,
+          backgroundColor: text.bgColor,
         }"
       >
         <div
@@ -21,12 +19,7 @@
         >
           {{ getEditorTranslation('no-text-fields-selected') }}
         </div>
-        <FieldsOrder
-          v-else-if="detailsReady"
-          :fields="props.content.fields"
-          :fields-order="props.content.fieldsOrder"
-          :texts="texts"
-        />
+        <FieldsOrder v-else-if="detailsReady" :fields="fields" :fields-order="fieldsOrder" :texts="texts" />
       </div>
     </template>
     <template v-else>
@@ -50,22 +43,20 @@
           v-if="shouldShowTextBlock"
           :class="[
             'absolute max-w-screen-3xl mx-auto inset-0 p-4 flex flex-col @md:basis-2/4',
-            { '@md:p-10': props.content.text.bgColor },
+            { '@md:p-10': text.bgColor },
           ]"
           :style="{
-            color: props.content.text.color,
-            textAlign: getTextAlignment(props.content.text.textAlignment ?? ''),
-            alignItems: getContentPosition(props.content.text.align ?? ''),
-            justifyContent: getContentPosition(props.content.text.justify ?? ''),
+            color: text.color,
+            textAlign: getTextAlignment(text.textAlignment ?? ''),
+            alignItems: getContentPosition(text.align ?? ''),
+            justifyContent: getContentPosition(text.justify ?? ''),
           }"
           :data-testid="'category-data-overlay-' + meta.uuid"
         >
           <div
             :class="categoryDataContentClass"
             :style="{
-              backgroundColor: props.content.text.background
-                ? hexToRgba(props.content.text.bgColor, props.content.text.bgOpacity)
-                : '',
+              backgroundColor: text.background ? hexToRgba(text.bgColor, text.bgOpacity) : '',
             }"
             :data-testid="'category-data-content-' + meta.uuid"
           >
@@ -78,12 +69,7 @@
             >
               {{ getEditorTranslation('no-text-fields-selected') }}
             </div>
-            <FieldsOrder
-              v-else-if="detailsReady"
-              :fields="props.content.fields"
-              :fields-order="props.content.fieldsOrder"
-              :texts="texts"
-            />
+            <FieldsOrder v-else-if="detailsReady" :fields="fields" :fields-order="fieldsOrder" :texts="texts" />
           </div>
         </div>
       </div>
@@ -93,7 +79,13 @@
 
 <script setup lang="ts">
 import { type Category, categoryGetters } from '@plentymarkets/shop-api';
-import type { CategoryData, CategoryDataProps } from '~/components/blocks/CategoryData/types';
+import type {
+  CategoryData,
+  CategoryDataContent,
+  CategoryDataFieldKey,
+  CategoryDataFieldsVisibility,
+  CategoryDataProps,
+} from '~/components/blocks/CategoryData/types';
 import type { CategoryDetails } from '@plentymarkets/shop-api/server/types';
 import FieldsOrder from './FieldsOrder.vue';
 
@@ -103,12 +95,37 @@ const props = defineProps<CategoryDataProps>();
 const { hexToRgba, getTextAlignment, getContentPosition, isMobile } = useBlockContentHelper();
 const { data: productsCatalog } = useProducts();
 const category = computed(() => productsCatalog.value.category || ({} as Category));
+const fields = computed<CategoryDataFieldsVisibility>(() =>
+  Object.assign(
+    {
+      name: true,
+      description1: false,
+      description2: false,
+      shortDescription: false,
+    },
+    props.content.fields || {},
+  ),
+);
+const fieldsOrder = computed<CategoryDataFieldKey[]>(
+  () => props.content.fieldsOrder || ['name', 'description1', 'description2', 'shortDescription'],
+);
+const displayCategoryImage = computed(() => props.content.displayCategoryImage || 'off');
+const text = computed<CategoryDataContent['text']>(() => ({
+  color: '',
+  bgColor: '',
+  bgOpacity: 1,
+  textAlignment: 'left',
+  justify: 'top',
+  align: 'left',
+  background: false,
+  ...(props.content.text || {}),
+}));
 const enabledText = computed(
   () =>
-    (props.content.fields.name && details.value.name) ||
-    (props.content.fields.description1 && details.value.description) ||
-    (props.content.fields.description2 && details.value.description2) ||
-    (props.content.fields.shortDescription && details.value.shortDescription),
+    (fields.value.name && details.value.name) ||
+    (fields.value.description1 && details.value.description) ||
+    (fields.value.description2 && details.value.description2) ||
+    (fields.value.shortDescription && details.value.shortDescription),
 );
 const showNoTextMessage = computed(() => !enabledText.value);
 const { isEditMode, isPreviewMode, isLiveMode } = useEditorState();
@@ -118,13 +135,13 @@ const shouldShowTextBlock = computed(
 
 const details = computed(() => categoryGetters.getCategoryDetails(category.value) || ({} as CategoryDetails));
 const texts = computed<CategoryData>(() => {
-  const fields = props.content.fields || {};
+  const fieldsData = fields.value;
   const detailsText = details.value || ({} as CategoryDetails);
   return {
-    name: fields.name && detailsText.name ? detailsText.name : '',
-    description1: fields.description1 && detailsText.description ? detailsText.description : '',
-    description2: fields.description2 && detailsText.description2 ? detailsText.description2 : '',
-    shortDescription: fields.shortDescription && detailsText.shortDescription ? detailsText.shortDescription : '',
+    name: fieldsData.name && detailsText.name ? detailsText.name : '',
+    description1: fieldsData.description1 && detailsText.description ? detailsText.description : '',
+    description2: fieldsData.description2 && detailsText.description2 ? detailsText.description2 : '',
+    shortDescription: fieldsData.shortDescription && detailsText.shortDescription ? detailsText.shortDescription : '',
   };
 });
 
@@ -133,10 +150,10 @@ const detailsReady = computed(() => {
   return !!(textsData.name || textsData.description1 || textsData.description2 || textsData.shortDescription);
 });
 const imagePath = computed(() => {
-  if (props.content.displayCategoryImage === 'image-1') {
+  if (displayCategoryImage.value === 'image-1') {
     return details.value.imagePath;
   }
-  if (props.content.displayCategoryImage === 'image-2') {
+  if (displayCategoryImage.value === 'image-2') {
     return details.value.image2Path;
   }
   return '';
