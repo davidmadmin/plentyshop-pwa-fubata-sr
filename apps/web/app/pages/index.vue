@@ -1,11 +1,23 @@
 <template>
   <div>
+    <ScrewFinder
+      v-if="showScrewFinderPreview"
+      name="ScrewFinder"
+      type="content"
+      :content="screwFinderDefaults"
+      :meta="{ uuid: 'local-screw-finder-preview' }"
+    />
     <EditableBlocks :identifier="'index'" :type="'immutable'" />
   </div>
 </template>
 
 <script lang="ts" setup>
 import type { Locale } from '#i18n';
+import { screwFinderDefaults } from '~/components/blocks/ScrewFinder/defaults';
+import ScrewFinder from '~/components/blocks/ScrewFinder/ScrewFinder.vue';
+
+const route = useRoute();
+const showScrewFinderPreview = computed(() => import.meta.dev && route.query.previewScrewFinder?.toString() === '1');
 
 defineI18nRoute({
   locales: process.env.LANGUAGELIST?.split(',') as Locale[],
