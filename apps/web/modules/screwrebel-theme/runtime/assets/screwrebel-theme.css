@@ -20,20 +20,40 @@ body.screwrebel-theme #app-container :is(h1, h2, h3, h4) {
 }
 
 /*
- * Text blocks store their configured colour as an inline style on the
- * surrounding text-content element. Set the rendered rich-text surface
- * explicitly so the default black editor value cannot leak onto the dark
- * storefront background.
+ * Standard text cards store their configured colour inline on text-content.
+ * Replace only the editor's default black value on dark pages. Deliberately
+ * configured colours remain inherited from text-content.
  */
-body.screwrebel-theme #app-container .block-wrapper [data-testid^='text-html'] {
-  color: #f2f2f2;
+body.screwrebel-theme
+  #app-container
+  .block-wrapper
+  [data-testid='text-card']
+  > [data-testid='text-content'][style*='color: rgb(0, 0, 0)']
+  > [data-testid^='text-html'] {
+  color: var(--screwrebel-theme-content-text-color);
 }
 
-body.screwrebel-theme #app-container .block-wrapper [data-testid^='text-html'] a {
+body.screwrebel-theme
+  #app-container
+  .block-wrapper
+  [data-testid='text-card']
+  > [data-testid='text-content']
+  > [data-testid^='text-html']
+  :is(h1, h2, h3, h4, a) {
+  color: inherit;
+}
+
+body.screwrebel-theme
+  #app-container
+  .block-wrapper
+  [data-testid='text-card']
+  > [data-testid='text-content'][style*='color: rgb(0, 0, 0)']
+  > [data-testid^='text-html']
+  a {
   color: #fff;
 }
 
-/* Keep configured text colours on intentionally light content surfaces. */
+/* Preserve configured colours on intentionally light content surfaces. */
 body.screwrebel-theme
   #app-container
   :is([data-testid^='banner-content-'], [data-testid='newsletter-block'])

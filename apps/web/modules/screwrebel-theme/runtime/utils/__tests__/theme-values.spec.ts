@@ -22,6 +22,12 @@ describe('SCREWREBEL theme value normalization', () => {
     );
   });
 
+  it('should use the supplied fallback for invalid optional colours', () => {
+    expect(normalizeThemeColor('', SCREWREBEL_THEME_DEFAULTS.brandContentTextColor)).toBe(
+      SCREWREBEL_THEME_DEFAULTS.brandContentTextColor,
+    );
+  });
+
   it('should preserve supported texture URLs and reject script URLs', () => {
     expect(normalizeThemeTextureUrl('/images/custom.avif')).toBe('/images/custom.avif');
     expect(normalizeThemeTextureUrl('https://cdn.example.com/texture.avif')).toBe(

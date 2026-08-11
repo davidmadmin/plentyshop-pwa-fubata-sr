@@ -6,6 +6,7 @@ This local Nuxt module owns the configurable INTRA-TEC/SCREWREBEL shop presentat
 
 - Master `Enable theme` switch in `Branding & Design > Design > Brand Theme`.
 - Configurable page background colour.
+- Configurable fallback text colour for standard text cards on the dark background.
 - Optional configurable background texture, size, repeat and position.
 - Dark merchandising styles for category navigation, product cards, breadcrumbs, the product buybox and reviews.
 - Independently configurable Adobe price-font preset.
@@ -22,6 +23,9 @@ The historical persisted setting keys are preserved:
 - `brandBackgroundTextureRepeat`
 - `brandBackgroundTexturePosition`
 - `priceFontPreset`
+
+The module additionally stores the standard Text Card fallback under `brandContentTextColor`. This key is new and
+does not replace any historical widget-level text-colour setting.
 
 Keeping the keys unchanged allows existing PlentyONE site-setting values to continue working after the refactor.
 

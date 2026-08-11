@@ -12,10 +12,12 @@ const TEXTURE_POSITION_VALUES = new Set([
 ]);
 
 /**
- * Returns a safe CSS colour or the configured module default.
+ * Returns a safe CSS colour or the supplied module default.
  */
-export const normalizeThemeColor = (value: string): string =>
-  CSS_COLOR_PATTERN.test(value.trim()) ? value.trim() : SCREWREBEL_THEME_DEFAULTS.brandPageBackgroundColor;
+export const normalizeThemeColor = (
+  value: string,
+  fallback: string = SCREWREBEL_THEME_DEFAULTS.brandPageBackgroundColor,
+): string => (CSS_COLOR_PATTERN.test(value.trim()) ? value.trim() : fallback);
 
 /**
  * Returns a safe local, remote or image data URL for use inside CSS url().

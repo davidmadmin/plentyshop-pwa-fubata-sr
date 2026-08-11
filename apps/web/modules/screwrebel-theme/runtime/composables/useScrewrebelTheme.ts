@@ -1,4 +1,4 @@
-import { SCREWREBEL_THEME_SETTING_KEYS } from '../config/theme';
+import { SCREWREBEL_THEME_DEFAULTS, SCREWREBEL_THEME_SETTING_KEYS } from '../config/theme';
 import { isScrewrebelThemeRoute } from '../utils/theme-routes';
 import {
   normalizeThemeColor,
@@ -24,6 +24,7 @@ export const useScrewrebelTheme = () => {
   const { getBooleanSetting: getEnabled } = useSiteSettings(SCREWREBEL_THEME_SETTING_KEYS.enabled);
   const { getBooleanSetting: getTextureEnabled } = useSiteSettings(SCREWREBEL_THEME_SETTING_KEYS.textureEnabled);
   const { getSetting: getBackgroundColor } = useSiteSettings(SCREWREBEL_THEME_SETTING_KEYS.backgroundColor);
+  const { getSetting: getContentTextColor } = useSiteSettings(SCREWREBEL_THEME_SETTING_KEYS.contentTextColor);
   const { getSetting: getTextureImage } = useSiteSettings(SCREWREBEL_THEME_SETTING_KEYS.textureImage);
   const { getSetting: getTextureSize } = useSiteSettings(SCREWREBEL_THEME_SETTING_KEYS.textureSize);
   const { getSetting: getTextureRepeat } = useSiteSettings(SCREWREBEL_THEME_SETTING_KEYS.textureRepeat);
@@ -33,6 +34,9 @@ export const useScrewrebelTheme = () => {
   const enabled = computed(() => configured.value && isScrewrebelThemeRoute(route?.path || '/'));
   const textureEnabled = computed(() => enabled.value && readSetting(getTextureEnabled, false));
   const backgroundColor = computed(() => normalizeThemeColor(readSetting(getBackgroundColor, '')));
+  const contentTextColor = computed(() =>
+    normalizeThemeColor(readSetting(getContentTextColor, ''), SCREWREBEL_THEME_DEFAULTS.brandContentTextColor),
+  );
   const textureImage = computed(() => normalizeThemeTextureUrl(readSetting(getTextureImage, '')));
   const textureSize = computed(() => normalizeThemeTextureSize(readSetting(getTextureSize, '')));
   const textureRepeat = computed(() => normalizeThemeTextureRepeat(readSetting(getTextureRepeat, '')));
@@ -41,6 +45,7 @@ export const useScrewrebelTheme = () => {
   return {
     backgroundColor,
     configured,
+    contentTextColor,
     enabled,
     textureEnabled,
     textureImage,
