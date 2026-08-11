@@ -19,6 +19,37 @@ body.screwrebel-theme #app-container :is(h1, h2, h3, h4) {
   color: #f7f7f7;
 }
 
+/*
+ * Text blocks store their configured colour as an inline style on the
+ * surrounding text-content element. Set the rendered rich-text surface
+ * explicitly so the default black editor value cannot leak onto the dark
+ * storefront background.
+ */
+body.screwrebel-theme #app-container .block-wrapper [data-testid^='text-html'] {
+  color: #f2f2f2;
+}
+
+body.screwrebel-theme #app-container .block-wrapper [data-testid^='text-html'] a {
+  color: #fff;
+}
+
+/* Keep configured text colours on intentionally light content surfaces. */
+body.screwrebel-theme
+  #app-container
+  :is([data-testid^='banner-content-'], [data-testid='newsletter-block'])
+  [data-testid^='text-html'],
+body.screwrebel-theme
+  #app-container
+  :is([data-testid^='banner-content-'], [data-testid='newsletter-block'])
+  [data-testid^='text-html']
+  :is(h1, h2, h3, h4, a) {
+  color: inherit;
+}
+
+body.screwrebel-theme #app-container [data-testid='newsletter-block'] {
+  color: #151a16;
+}
+
 body.screwrebel-theme #app-container .block-wrapper :is(.no-preflight, .no-preflight p, .no-preflight span) {
   color: #f2f2f2;
 }
