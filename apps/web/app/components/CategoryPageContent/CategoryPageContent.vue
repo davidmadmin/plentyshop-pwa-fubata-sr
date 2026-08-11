@@ -9,7 +9,7 @@
       </CategorySidebar>
       <div class="flex-1">
         <div class="flex justify-between items-center mb-6">
-          <span class="font-bold @md:text-lg">
+          <span :class="['font-bold @md:text-lg', { 'text-neutral-100': darkBrandThemeEnabled }]">
             {{
               t('search.numberOfProducts', {
                 count: products?.length ?? 0,
@@ -58,7 +58,10 @@
           </NuxtLazyHydrate>
         </section>
         <LazyCategoryEmptyState v-else />
-        <div v-if="totalProducts > 0" class="mt-4 mb-4 typography-text-xs flex gap-1">
+        <div
+          v-if="totalProducts > 0"
+          :class="['mt-4 mb-4 typography-text-xs flex gap-1', { 'text-neutral-300': darkBrandThemeEnabled }]"
+        >
           <span>{{ t('common.labels.asterisk') }}</span>
           <span v-if="showNetPrices">{{ t('product.priceExclVAT') }}</span>
           <span v-else>{{ t('product.priceInclVAT') }}</span>
@@ -94,6 +97,7 @@ import type { CategoryPageContentProps } from '~/components/CategoryPageContent/
 import { paths } from '~/utils/paths';
 
 const { title, totalProducts, itemsPerPage = 24, products = [] } = defineProps<CategoryPageContentProps>();
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 
 const localePath = useLocalePath();
 const { getFacetsFromURL } = useCategoryFilter();

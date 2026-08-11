@@ -2,12 +2,25 @@
   <div class="w-full" data-testid="category-sorting">
     <div
       v-if="!selectionModeCompact"
-      class="bg-primary-50/50 mb-4 px-4 py-2 rounded-none uppercase typography-headline-6 font-bold tracking-widest select-none"
+      :class="[
+        'mb-4 px-4 py-2 rounded-none uppercase typography-headline-6 font-bold tracking-widest select-none',
+        darkBrandThemeEnabled ? 'bg-neutral-800 text-neutral-100' : 'bg-primary-50/50',
+      ]"
     >
       {{ t('common.labels.sortBy') }}
     </div>
     <div class="px-4">
-      <SfSelect id="sortBy" v-model="selected" :aria-label="t('common.labels.sortBy')" data-testid="select-sort-by">
+      <SfSelect
+        id="sortBy"
+        v-model="selected"
+        :class="
+          darkBrandThemeEnabled
+            ? '!bg-neutral-900 !text-neutral-100 !ring-neutral-700 hover:!ring-neutral-500 active:!ring-neutral-400 focus:!ring-neutral-400'
+            : ''
+        "
+        :aria-label="t('common.labels.sortBy')"
+        data-testid="select-sort-by"
+      >
         <option v-if="selectionModeCompact" value="" disabled hidden>{{ t('common.labels.sortBy') }}</option>
         <option v-for="option in options" :key="option" :value="option">
           {{ t(`category.sorting.${option}`) }}
@@ -23,6 +36,7 @@ import { useRoute } from 'vue-router';
 import { isPageOfType } from '~/utils/pathHelper';
 
 const props = defineProps<{ selectionModeCompact?: boolean }>();
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 const { updateSorting } = useCategoryFilter();
 const { getJsonSetting: availableSortingOptions } = useSiteSettings('availableSortingOptions');
 const { getSetting: defaultSortingSearch } = useSiteSettings('defaultSortingSearch');

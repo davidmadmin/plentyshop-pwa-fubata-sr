@@ -10,7 +10,7 @@
         }"
         data-testid="item-count"
       >
-        <span class="font-bold @md:text-lg">
+        <span :class="['font-bold @md:text-lg', { 'text-neutral-100': darkBrandThemeEnabled }]">
           {{
             t('search.numberOfProducts', {
               count: products?.length ?? 0,
@@ -38,7 +38,10 @@
       </NuxtLazyHydrate>
     </section>
     <LazyCategoryEmptyState v-else />
-    <div v-if="totalProducts > 0" class="mt-4 mb-4 typography-text-xs flex gap-1">
+    <div
+      v-if="totalProducts > 0"
+      :class="['mt-4 mb-4 typography-text-xs flex gap-1', { 'text-neutral-300': darkBrandThemeEnabled }]"
+    >
       <span>{{ t('common.labels.asterisk') }}</span>
       <span v-if="showNetPrices">{{ t('product.priceExclVAT') }}</span>
       <span v-else>{{ t('product.priceInclVAT') }}</span>
@@ -74,6 +77,7 @@ import { productGetters } from '@plentymarkets/shop-api';
 import type { ItemGridProps } from '~/components/blocks/ItemGrid/types';
 
 const { getFacetsFromURL } = useCategoryFilter();
+const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 
 const viewport = useViewport();
 const localePath = useLocalePath();
