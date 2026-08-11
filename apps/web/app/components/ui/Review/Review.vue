@@ -1,20 +1,9 @@
 <template>
-  <article
-    :class="[
-      'w-full p-4 mb-4 border rounded-md',
-      darkBrandThemeEnabled ? 'border-[#3f3f3f] bg-[#171717] text-[#f2f2f2]' : '',
-    ]"
-    data-testid="review-item"
-  >
+  <article class="w-full p-4 mb-4 border rounded-md" data-testid="review-item">
     <div class="w-full flex">
-      <div :class="['w-2/3 text-xs truncate mb-2', darkBrandThemeEnabled ? 'text-[#b8b8b8]' : 'text-neutral-400']">
-        <span
-          :class="['mr-2 text-xs', darkBrandThemeEnabled ? 'text-[#e5e5e5]' : 'text-neutral-700']"
-          data-testid="review-item-authorName"
-        >
-          {{ reviewAuthor }}
-        </span>
-        <span v-if="verifiedPurchase" :class="darkBrandThemeEnabled ? 'text-emerald-400' : 'text-green-800'">
+      <div class="w-2/3 text-xs truncate text-neutral-400 mb-2">
+        <span class="mr-2 text-xs text-neutral-700" data-testid="review-item-authorName">{{ reviewAuthor }}</span>
+        <span v-if="verifiedPurchase" class="text-green-800">
           <SfIconCheck size="xs" class="mr-1" />
           {{ t('review.verifiedPurchase') }}
         </span>
@@ -28,7 +17,7 @@
         <SfIconBase
           viewBox="0 0 32 32"
           size="xs"
-          :class="[darkBrandThemeEnabled ? 'fill-[#d4d4d4] hover:fill-white' : 'fill-primary-700', 'cursor-pointer']"
+          class="fill-primary-700 cursor-pointer"
           data-testid="edit-review-button"
           @click="openReviewModal(defaults.DEFAULT_REVIEW_MODAL_TYPES.updateReview, reviewItem)"
         >
@@ -36,7 +25,7 @@
         </SfIconBase>
         <SfIconDelete
           size="sm"
-          :class="[darkBrandThemeEnabled ? 'fill-[#d4d4d4] hover:fill-white' : 'fill-primary-700', 'cursor-pointer']"
+          class="fill-primary-700 cursor-pointer"
           data-testid="remove-review-button"
           @click="openReviewModal(defaults.DEFAULT_REVIEW_MODAL_TYPES.deleteReview, reviewItem)"
         />
@@ -45,25 +34,18 @@
 
     <header>
       <p class="font-medium mb-2" data-testid="review-item-title">{{ reviewGetters.getReviewTitle(reviewItem) }}</p>
-      <div :class="['flex items-center pr-2 pb-2 text-xs', darkBrandThemeEnabled ? 'text-[#b8b8b8]' : 'text-neutral-500']">
+      <div class="flex items-center pr-2 pb-2 text-xs text-neutral-500">
         <SfRating :value="reviewGetters.getReviewRating(reviewItem) ?? undefined" :max="5" size="xs" class="mr-2" />
         {{ $d(new Date(reviewGetters.getReviewDate(reviewItem))) }}
       </div>
     </header>
 
-    <p :class="['text-sm', darkBrandThemeEnabled ? 'text-[#e5e5e5]' : 'text-neutral-900']">
-      {{ reviewGetters.getReviewMessage(reviewItem) }}
-    </p>
+    <p class="text-sm text-neutral-900">{{ reviewGetters.getReviewMessage(reviewItem) }}</p>
 
     <button
       v-if="reviewItem.replies.length > 0"
       type="button"
-      :class="[
-        'inline-block text-sm font-normal border-b-2 cursor-pointer w-fit',
-        darkBrandThemeEnabled
-          ? 'border-[#7a7a7a] text-[#e5e5e5] hover:text-white hover:border-white'
-          : 'border-black hover:text-primary-500 hover:border-primary-800',
-      ]"
+      class="inline-block text-sm font-normal border-b-2 border-black cursor-pointer w-fit hover:text-primary-500 hover:border-primary-800"
       data-testid="show-replies"
       @click="isCollapsed = !isCollapsed"
     >
@@ -79,14 +61,12 @@
           class="@md:mr-16"
           data-testid="reply-item"
         >
-          <div :class="['flex items-center mb-2 text-xs', { 'text-[#d4d4d4]': darkBrandThemeEnabled }]">
+          <div class="flex items-center mb-2 text-xs">
             <div class="w-full">
-              <span :class="['font-medium', { 'text-[#f2f2f2]': darkBrandThemeEnabled }]" data-testid="reply-item-authorName">
+              <span class="font-medium" data-testid="reply-item-authorName">
                 {{ reply.authorName || t('review.anonymous') }}
               </span>
-              <span :class="['pl-2', darkBrandThemeEnabled ? 'text-[#b8b8b8]' : 'text-neutral-500']">
-                {{ $d(new Date(reviewGetters.getReplyDate(reply))) }}
-              </span>
+              <span class="pl-2 text-neutral-500">{{ $d(new Date(reviewGetters.getReplyDate(reply))) }}</span>
             </div>
 
             <div v-if="isAnswerEditable(reply)" class="w-full flex justify-end items-center space-x-3">
@@ -97,7 +77,7 @@
               <SfIconBase
                 viewBox="0 0 38 38"
                 size="xs"
-                :class="[darkBrandThemeEnabled ? 'fill-[#d4d4d4] hover:fill-white' : 'fill-primary-700', 'cursor-pointer']"
+                class="fill-primary-700 cursor-pointer"
                 data-testid="edit-reply-button"
                 @click="openReviewModal(defaults.DEFAULT_REVIEW_MODAL_TYPES.updateReply, reply)"
               >
@@ -105,16 +85,14 @@
               </SfIconBase>
               <SfIconDelete
                 size="xs"
-                :class="[darkBrandThemeEnabled ? 'fill-[#d4d4d4] hover:fill-white' : 'fill-primary-700', 'cursor-pointer']"
+                class="fill-primary-700 cursor-pointer"
                 data-testid="remove-reply-button"
                 @click="openReviewModal(defaults.DEFAULT_REVIEW_MODAL_TYPES.deleteReply, reply)"
               />
             </div>
             <br />
           </div>
-          <p :class="['text-sm', { 'text-[#e5e5e5]': darkBrandThemeEnabled }]">
-            {{ reviewGetters.getReviewMessage(reply) }}
-          </p>
+          <p class="text-sm">{{ reviewGetters.getReviewMessage(reply) }}</p>
         </div>
       </template>
 
@@ -122,7 +100,7 @@
         <UiButton
           variant="tertiary"
           size="sm"
-          :class="['self-start', darkBrandThemeEnabled ? '!text-[#e5e5e5] hover:!text-white' : '']"
+          class="self-start"
           data-testid="add-reply-button"
           @click="isAnswerFormOpen = true"
         >
@@ -153,7 +131,6 @@ const props = defineProps<ReviewProps>();
 const { reviewItem } = toRefs(props);
 const isAnswerFormOpen = ref(false);
 const isCollapsed = ref(true);
-const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 
 const { user, isAuthorized } = useCustomer();
 const { currentProduct } = useProducts();

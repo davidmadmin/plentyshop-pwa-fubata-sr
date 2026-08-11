@@ -2,10 +2,7 @@
   <div
     ref="reviewArea"
     class="relative col-span-5 h-fit"
-    :class="[
-      { 'pointer-events-none opacity-50': loadingReviews },
-      darkBrandThemeEnabled ? 'text-[#f2f2f2]' : '',
-    ]"
+    :class="{ 'pointer-events-none opacity-50': loadingReviews }"
     :style="customerReviewInlineStyle"
     data-testid="review-area"
   >
@@ -23,14 +20,11 @@
     >
       <UiAccordionItem
         v-model="reviewsOpen"
-        :summary-class="reviewSummaryClass"
+        summary-class="@md:rounded-md w-full hover:bg-neutral-100 py-2 flex justify-between items-center select-none"
         content-padding-class=""
       >
         <template #summary>
-          <h2
-            id="customerReviewsClick"
-            :class="['font-bold text-lg leading-6 @md:text-2xl', { 'text-[#f7f7f7]': darkBrandThemeEnabled }]"
-          >
+          <h2 id="customerReviewsClick" class="font-bold text-lg leading-6 @md:text-2xl">
             {{ props.content.text.title }}
           </h2>
         </template>
@@ -42,7 +36,7 @@
         <p
           v-if="paginatedProductReviews.length === 0"
           data-testid="no-review-text"
-          :class="['font-bold leading-6 w-full py-2', { 'text-[#e5e5e5]': darkBrandThemeEnabled }]"
+          class="font-bold leading-6 w-full py-2"
         >
           {{ t('product.noReviews') }}
         </p>
@@ -59,10 +53,7 @@
     </div>
 
     <div v-else>
-      <h2
-        id="customerReviewsClick"
-        :class="['font-bold text-lg leading-6 @md:text-2xl', { 'text-[#f7f7f7]': darkBrandThemeEnabled }]"
-      >
+      <h2 id="customerReviewsClick" class="font-bold text-lg leading-6 @md:text-2xl">
         {{ props.content.text.title }}
       </h2>
 
@@ -72,7 +63,7 @@
       <p
         v-if="paginatedProductReviews.length === 0"
         data-testid="no-review-text"
-        :class="['font-bold leading-6 w-full py-2', { 'text-[#e5e5e5]': darkBrandThemeEnabled }]"
+        class="font-bold leading-6 w-full py-2"
       >
         {{ t('product.noReviews') }}
       </p>
@@ -99,7 +90,6 @@ const props = defineProps<CustomerReviewProps & ProductAccordionPropsType>();
 const viewport = useViewport();
 const reviewsOpen = ref(!props.content.layout.initiallyCollapsed);
 const route = useRoute();
-const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 
 const config = useRuntimeConfig().public;
 const { currentProduct } = useProducts();
@@ -136,12 +126,6 @@ const maxVisiblePages = computed(() => (viewport.isGreaterOrEquals('lg') ? 5 : 2
 const hasTitle = computed(() => {
   return props.content.text.title && props.content.text.title.trim().length > 0;
 });
-
-const reviewSummaryClass = computed(() =>
-  darkBrandThemeEnabled.value
-    ? '@md:rounded-md w-full bg-[#262626] hover:bg-[#303030] py-2 px-4 flex justify-between items-center select-none text-[#f2f2f2] border border-[#444444]'
-    : '@md:rounded-md w-full hover:bg-neutral-100 py-2 flex justify-between items-center select-none',
-);
 
 watch(
   () => reviewsOpen.value,

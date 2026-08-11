@@ -16,11 +16,7 @@
     <SfLoaderCircular v-if="actionLoading" class="flex justify-center items-center" size="sm" />
     <template v-else>
       <SfIconClose v-if="isCloseButton" size="sm" />
-      <SfIconFavoriteFilled
-        v-else-if="isWishlistItem(variationId)"
-        size="sm"
-        :class="{ 'text-[#f20000]': darkBrandThemeEnabled }"
-      />
+      <SfIconFavoriteFilled v-else-if="isWishlistItem(variationId)" size="sm" />
       <SfIconFavorite v-else size="sm" />
       <slot />
     </template>
@@ -34,7 +30,6 @@ import { productGetters } from '@plentymarkets/shop-api';
 
 const { product, quantity = 1, discard = false, variant = 'tertiary' } = defineProps<WishlistButtonProps>();
 const { isWishlistItem, interactWithWishlist, loading: wishlistLoading } = useWishlist();
-const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 const actionLoading = ref(false);
 
 const productName = computed(() => productGetters.getName(product));

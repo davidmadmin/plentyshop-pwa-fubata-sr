@@ -2,10 +2,7 @@
   <div class="w-full" data-testid="category-items-per-page">
     <div
       v-if="!selectionModeCompact"
-      :class="[
-        'mb-4 px-4 py-2 rounded-none uppercase typography-headline-6 font-bold tracking-widest select-none',
-        darkBrandThemeEnabled ? 'bg-neutral-800 text-neutral-100' : 'bg-primary-50/50',
-      ]"
+      class="bg-primary-50/50 mb-4 px-4 py-2 rounded-none uppercase typography-headline-6 font-bold tracking-widest select-none"
     >
       {{ t('common.labels.perPage') }}
     </div>
@@ -13,11 +10,6 @@
       <SfSelect
         id="perPage"
         v-model="selected"
-        :class="
-          darkBrandThemeEnabled
-            ? '!bg-neutral-900 !text-neutral-100 !ring-neutral-700 hover:!ring-neutral-500 active:!ring-neutral-400 focus:!ring-neutral-400'
-            : ''
-        "
         :aria-label="t('common.labels.perPage')"
         @change="updateItemsPerPage(Number(selected))"
       >
@@ -38,7 +30,6 @@ import type { CategoryItemsPerPageProps, Option } from '~/components/CategoryIte
 import { defaults } from '~/composables';
 
 const props = defineProps<CategoryItemsPerPageProps & { selectionModeCompact?: boolean }>();
-const { enabled: darkBrandThemeEnabled } = useDarkBrandTheme();
 
 const { updateItemsPerPage: updateItemsPerPageFromComposable, getFacetsFromURL } = useCategoryFilter();
 const selectionModeCompact = computed(() => props.selectionModeCompact ?? false);
