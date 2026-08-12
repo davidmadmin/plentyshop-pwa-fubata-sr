@@ -30,9 +30,7 @@ export const useLastSeen = () => {
   const addLastSeen = (product: Product) => {
     if (import.meta.client && isLastSeenTrackingEnabled()) {
       try {
-        void useSdk()
-          .plentysystems.doAddLastSeen(productGetters.getVariationId(product))
-          .catch(() => undefined);
+        useSdk().plentysystems.doAddLastSeen(productGetters.getVariationId(product));
       } catch {
         // Ignore errors
       }
