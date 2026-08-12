@@ -43,14 +43,15 @@
     "lhci:mobile": "lhci collect --config=lighthouserc.mobile.json && lhci assert",
     "lhci:desktop": "lhci collect --config=lighthouserc.desktop.json && lhci assert",
     "worktree:spawn": "./scripts/spawn-worktree.sh",
-    "generate:component": "./.github/skills/code-generation/generate.sh component",
-    "generate:composable": "./.github/skills/code-generation/generate.sh composable",
-    "generate:block": "./.github/skills/code-generation/generate.sh component --with-form",
-    "generate:settings": "./.github/skills/code-generation/generate.sh component --with-view --with-toolbar"
+    "generate:component": "./.claude/skills/code-generation/generate.sh component",
+    "generate:composable": "./.claude/skills/code-generation/generate.sh composable",
+    "generate:block": "./.claude/skills/code-generation/generate.sh component --with-form",
+    "generate:settings": "./.claude/skills/code-generation/generate.sh component --with-view --with-toolbar",
+    "llm:link": "node ./scripts/llm-link.js"
   },
   "dependencies": {
-    "@plentymarkets/shop-api": "^0.176.0",
-    "@plentymarkets/shop-core": "^1.28.0",
+    "@plentymarkets/shop-api": "^0.178.1",
+    "@plentymarkets/shop-core": "^1.32.0",
     "@plentymarkets/shop-module-gtag": "^1.3.0",
     "@plentymarkets/shop-module-mollie": "^1.7.0",
     "@tanstack/vue-virtual": "^3.13.24",
@@ -86,8 +87,8 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@lhci/cli": "^0.15.1",
-    "@nuxt/devtools": "2.7.0",
-    "@nuxt/test-utils": "3.21.0",
+    "@nuxt/devtools": "3.3.1",
+    "@nuxt/test-utils": "^4.0.3",
     "@nuxtjs/turnstile": "^1.1.3",
     "@paypal/paypal-js": "8.4.2",
     "@types/google.maps": "^3.64.0",
@@ -103,7 +104,7 @@
     "husky": "^8.0.3",
     "is-ci": "^3.0.1",
     "lint-staged": "^16.4.0",
-    "nuxt": "^4.4.6",
+    "nuxt": "^4.5.1",
     "nuxt-security": "2.6.0",
     "nuxt-viewport": "^2.4.0",
     "playwright-core": "^1.59.1",
@@ -116,7 +117,7 @@
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.9.3",
     "vite-plugin-checker": "^0.13.0",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.10",
     "wait-on": "^8.0.5"
   },
   "overrides": {
@@ -133,13 +134,13 @@
     "c12": "3.3.3",
     "unimport": "5.6.0",
     "tmp": "0.2.5",
-    "@unhead/vue": "2.1.15",
-    "eslint": "^9.39.4",
-    "vite": "^6.4.2 || ^7.3.3",
-    "vitest": {
-      "vite": "^7.3.3"
-    },
-    "@nuxt/devtools": "2.7.0"
+    "eslint": "^10.7.0",
+    "vite": "^8.1.4",
+    "@nuxt/devtools": "3.3.1",
+    "@nuxt/scripts": "^1.3.2",
+    "@unhead/vue": "^3.2.3",
+    "unhead": "^3.2.3",
+    "vue": "^3.5.40"
   },
   "engines": {
     "node": ">=24.0.0"

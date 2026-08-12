@@ -3,16 +3,39 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import type { Product } from '@plentymarkets/shop-api';
 import TextContent from '../TextContent.vue';
 
-const { useRouterMock, isInternalLinkMock, useProductsMock } = vi.hoisted(() => ({
-  useRouterMock: vi.fn(),
+const { useRouterMock, isInternalLinkMock, useProductsMock, tMock } = vi.hoisted(() => ({
+  useRouterMock: vi.fn(() => ({
+    push: vi.fn(),
+    resolve: vi.fn(),
+    options: {},
+    afterEach: vi.fn(),
+    beforeEach: vi.fn(),
+    beforeResolve: vi.fn(),
+  })),
   isInternalLinkMock: vi.fn(),
   useProductsMock: vi.fn(),
+  tMock: vi.fn(),
 }));
 
 mockNuxtImport('useRouter', () => useRouterMock);
 mockNuxtImport('useLocalePath', () => () => (path: string) => `/de${path}`);
 mockNuxtImport('isInternalLink', () => isInternalLinkMock);
+mockNuxtImport(
+  'localizeHtmlLinks',
+  () =>
+    (html: string, _router: unknown, localePath: (p: string) => string, resolveTrailingSlash: (p: string) => string) =>
+      html.replace(
+        /<a\b([^>]*?)href=(["'])([^"']*?)\2/gi,
+        (match: string, before: string, quote: string, href: string) => {
+          if (isInternalLinkMock(href)) {
+            return `<a${before}href=${quote}${resolveTrailingSlash(localePath(href))}${quote}`;
+          }
+          return match;
+        },
+      ),
+);
 mockNuxtImport('useProducts', () => useProductsMock);
+mockNuxtImport('t', () => tMock);
 
 const mockPush = vi.fn();
 const mockProduct = {
@@ -42,9 +65,17 @@ const mountComponent = (htmlDescription: string) =>
 describe('TextContent - renderedHtmlDescription', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useRouterMock.mockReturnValue({ push: mockPush, resolve: vi.fn() });
+    useRouterMock.mockReturnValue({
+      push: mockPush,
+      resolve: vi.fn(),
+      options: {},
+      afterEach: vi.fn(),
+      beforeEach: vi.fn(),
+      beforeResolve: vi.fn(),
+    });
     isInternalLinkMock.mockImplementation((href: string) => href.startsWith('/'));
     useProductsMock.mockReturnValue({ currentProduct: ref(mockProduct) });
+    tMock.mockImplementation((key: string) => ({ 'checkout.title': 'Checkout' })[key] ?? key);
   });
 
   it('should localize internal hrefs with localePath', () => {
@@ -119,12 +150,30 @@ describe('TextContent - renderedHtmlDescription', () => {
     expect(html).toContain('data-property-kind="property-value"');
     expect(html).toContain('>{value}</span>');
   });
+
+  it('should render i18n placeholders with the current translation value', () => {
+    const wrapper = mountComponent(
+      '<p><span data-i18n-key="checkout.title" title="i18n: checkout.title" class="rte-i18n-placeholder" contenteditable="false">title</span></p>',
+    );
+
+    const html = wrapper.find('[data-testid="text-html"]').html();
+    expect(html).toContain('data-i18n-key="checkout.title"');
+    expect(html).not.toContain('data-i18n-label');
+    expect(html).toContain('>Checkout</span>');
+  });
 });
 
 describe('TextContent - handleRteClick', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useRouterMock.mockReturnValue({ push: mockPush, resolve: vi.fn() });
+    useRouterMock.mockReturnValue({
+      push: mockPush,
+      resolve: vi.fn(),
+      options: {},
+      afterEach: vi.fn(),
+      beforeEach: vi.fn(),
+      beforeResolve: vi.fn(),
+    });
   });
 
   it('should navigate via router.push for internal links', async () => {

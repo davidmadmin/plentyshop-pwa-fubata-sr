@@ -7,6 +7,7 @@ import { paths } from './app/utils/paths';
 import settingsConfig from './app/configuration/settings.config';
 import featureFlagsConfig from './app/configuration/feature-flags.config';
 import { FailOnLargeChunksPlugin, FailOnForbiddenDataInPublicFolderPlugin } from './app/configuration/vite.config';
+import { FailOnUnmarkedBlockOverridesPlugin } from './app/configuration/vite.block-overrides';
 import { thirdPartyDeps, localPackageDeps } from './app/configuration/optimize-deps.config';
 
 export default defineNuxtConfig({
@@ -34,7 +35,14 @@ export default defineNuxtConfig({
         allow: ['../../..'], // relative to the current nuxt.config.ts
       },
     },
-    plugins: [FailOnLargeChunksPlugin, FailOnForbiddenDataInPublicFolderPlugin],
+    plugins: [FailOnLargeChunksPlugin, FailOnForbiddenDataInPublicFolderPlugin, FailOnUnmarkedBlockOverridesPlugin],
+    resolve: {
+      // cookiejs (via nuxt-viewport) ships a UMD `browser` entry without a default export.
+      // Vite 8 resolves to it and breaks the client bundle; force the ESM build instead.
+      alias: {
+        cookiejs: 'cookiejs/dist/cookie.esm.js',
+      },
+    },
     optimizeDeps: {
       include: [...thirdPartyDeps, ...localPackageDeps],
     },
@@ -42,23 +50,26 @@ export default defineNuxtConfig({
       modulePreload: { polyfill: false },
       rollupOptions: {
         output: {
-          manualChunks: {
-            tiptap: [
-              '@tiptap/core',
-              '@tiptap/extension-link',
-              '@tiptap/extension-underline',
-              '@tiptap/starter-kit',
-              '@tiptap/vue-3',
-            ],
-            tiptapExtensions: [
-              '@tiptap/extension-color',
-              '@tiptap/extension-emoji',
-              '@tiptap/extension-highlight',
-              '@tiptap/extension-placeholder',
-              '@tiptap/extension-text-align',
-              '@tiptap/extension-text-style',
-            ],
-            vuetify: ['vuetify', '@mdi/js'],
+          manualChunks(id) {
+            if (id.includes('utils/blocks/blocks-imports')) return 'block-registry';
+            if (/[/\\]blocks[/\\].+[/\\]defaults\.ts$/.test(id)) return 'block-registry';
+
+            const vendorChunks: Record<string, string[]> = {
+              tiptapExtensions: [
+                '@tiptap/extension-color',
+                '@tiptap/extension-emoji',
+                '@tiptap/extension-highlight',
+                '@tiptap/extension-placeholder',
+                '@tiptap/extension-text-align',
+                '@tiptap/extension-text-style',
+              ],
+              tiptap: ['@tiptap/'],
+              vuetify: ['vuetify/', '@mdi/js'],
+            };
+
+            for (const [chunk, packages] of Object.entries(vendorChunks)) {
+              if (packages.some((pkg) => id.includes(pkg))) return chunk;
+            }
           },
         },
       },
@@ -86,7 +97,7 @@ export default defineNuxtConfig({
       domain: validateApiUrl(process.env.API_URL) ?? process.env.API_ENDPOINT,
       apiEndpoint: process.env.API_ENDPOINT,
       activeLanguages: process.env.LANGUAGELIST || 'en,de',
-      disabledEditorSettings: process.env?.ENABLE_ALL_EDITOR_SETTINGS === '1' ? [] : ['shop-search'],
+      disabledEditorSettings: process.env?.ENABLE_ALL_EDITOR_SETTINGS === '1' ? [] : [],
       cookieGroups: cookieConfig,
       turnstileSiteKey: process.env?.CLOUDFLARETURNSTILEAPISITEKEY ?? '',
       noCache: process.env.NO_CACHE || '',
@@ -115,6 +126,7 @@ export default defineNuxtConfig({
   ],
   vuetify: {
     moduleOptions: {
+      prefixComposables: true,
       disableVuetifyStyles: true,
     },
     vuetifyOptions: {
@@ -208,7 +220,7 @@ export default defineNuxtConfig({
     workbox: {
       navigateFallback: null,
       globPatterns: ['**/*.{js,json,css,html,ico,svg,png,webp,ico,woff,woff2,ttf,eit,otf}', '_nuxt-plenty/icons/*'],
-      globIgnores: ['manifest**.webmanifest', '_nuxt-plenty/editor/blocksLists.json'],
+      globIgnores: ['manifest**.webmanifest'],
       additionalManifestEntries: [
         {
           url: '/offline',

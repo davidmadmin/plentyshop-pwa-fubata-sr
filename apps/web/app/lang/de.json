@@ -336,7 +336,8 @@
     },
     "googlePay": {
       "paymentInProgress": "Zahlung in Bearbeitung..."
-    }
+    },
+    "guaranteeNotice": "Ihre gesetzlichen Garantieansprüche"
   },
   "customAssets": {
     "assetDeletedSuccessfully": "Asset erfolgreich gelöscht",
@@ -869,6 +870,13 @@
     "confirmation": {
       "newsletterOptInMessage": "Ihre E-Mail-Adresse wurde bestätigt.",
       "newsletterOptInMessageError": "Beim Bestätigen Ihrer E-Mail ist ein Fehler aufgetreten."
+    },
+    "unsubscribe": {
+      "label": "Newsletter abbestellen",
+      "heading": "Newsletter abbestellen",
+      "info": "Geben Sie Ihre E-Mail-Adresse ein, um den Newsletter abzubestellen.",
+      "submit": "Abbestellen",
+      "success": "Sie wurden erfolgreich vom Newsletter abgemeldet."
     }
   },
   "offers": {
@@ -1019,9 +1027,12 @@
     }
   },
   "previewModeBar": {
+    "configId": "Konfigurations-ID:",
     "exitEditor": "Editor verlassen und zum Liveshop wechseln",
+    "exitPreviewMode": "Vorschaumodus beenden",
     "exitWithoutSaving": "Ohne Speichern verlassen",
-    "label": "Steuerelemente für Editor",
+    "editorLabel": "Steuerelemente für den Editor",
+    "previewLabel": "Steuerelemente für die Vorschau",
     "saveAndExit": "Speichern und verlassen",
     "title": "Editor verlassen und zum Liveshop wechseln?",
     "unsavedChangesWarning": "Es gibt ungespeicherte Änderungen."

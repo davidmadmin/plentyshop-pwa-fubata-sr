@@ -1,6 +1,6 @@
 <template>
   <template v-if="!order">
-    <div v-if="paymentKey === PayPalPaymentKey">
+    <div v-if="paymentKey === PayPalPaymentKey || paymentKey === PayPalPayLaterKey">
       <PayPalExpressButton
         :disabled="disableBuyButton"
         type="Checkout"
@@ -71,14 +71,13 @@
     >
       {{ t('common.actions.pay') }}
     </PayPalCreditCardBuyButton>
-    <!--
     <ApplePayButton
-        v-else-if="paymentKey === PayPalApplePayKey"
-        :style="disableBuyButton ? 'pointer-events: none;' : ''"
-        @button-clicked="handlePreparePaymentPayPal"
-        @on-payed="refetchOrderEvent()"
+      v-else-if="paymentKey === PayPalApplePayKey"
+      :style="disableBuyButton ? 'pointer-events: none;' : ''"
+      :order="order"
+      @button-clicked="handlePreparePaymentPayPal"
+      @on-payed="refetchOrderEvent()"
     />
-    -->
     <GooglePayButton
       v-else-if="paymentKey === PayPalGooglePayKey"
       :style="disableBuyButton ? 'pointer-events: none;' : ''"
@@ -135,6 +134,7 @@ import {
   PayPalGooglePayKey,
   PayPalApplePayKey,
   PayPalPayUponInvoiceKey,
+  PayPalPayLaterKey,
   PayPalAlternativeFundingSourceMapper,
   type PayPalAddToCartCallback,
 } from '#paypal/types';
@@ -201,6 +201,10 @@ const validateAndProceed = async (): Promise<boolean> => {
 };
 
 const handlePreparePaymentPayPal = async (callback?: PayPalAddToCartCallback) => {
+  if (props.order) {
+    if (typeof callback === 'function') callback(true);
+    return;
+  }
   const canProceed = await validateAndProceed();
   if (typeof callback === 'function') callback(canProceed);
 };

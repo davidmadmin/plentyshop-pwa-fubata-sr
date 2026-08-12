@@ -1,0 +1,350 @@
+import { describe, expect, it, vi } from 'vitest';
+import type { FilterGroup, Product } from '@plentymarkets/shop-api';
+import {
+  buildScrewFinderProductPath,
+  buildMatchCriteria,
+  buildNearbyMatches,
+  getRequiredFacetFilterBranches,
+  getRequiredFacetFilters,
+  getSafetyCriticalFilterBranches,
+  getSafetyCriticalFilters,
+  hasRequiredSafetyFilters,
+  rankScrewFinderProducts,
+  resolveScrewFinderFacets,
+  serializeFacetFilters,
+} from '../matching';
+
+vi.mock('@plentymarkets/shop-api', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@plentymarkets/shop-api')>();
+  return {
+    ...original,
+    productGetters: {
+      getName: (product: Product & { testName?: string }) => product.testName ?? '',
+      getShortDescription: (product: Product & { testDescription?: string }) => product.testDescription ?? '',
+      getDescription: () => '',
+      getTechnicalData: () => '',
+      getUrlPath: (product: Product & { testPath?: string }) => product.testPath ?? '',
+      getItemId: (product: Product & { testItemId?: string }) => product.testItemId ?? '',
+      getVariationId: (product: Product & { testVariationId?: number }) => product.testVariationId ?? 0,
+    },
+  };
+});
+
+const facets: FilterGroup[] = [
+  {
+    id: 22,
+    name: 'Werkstoff',
+    type: 'dynamic',
+    count: 2,
+    values: [
+      { id: 96, name: 'A2', count: 4 },
+      { id: 97, name: 'A4', count: 2 },
+    ],
+  },
+  {
+    id: 21,
+    name: 'Kopfform',
+    type: 'dynamic',
+    count: 1,
+    values: [{ id: 82, name: 'Senkkopf', count: 6 }],
+  },
+  {
+    id: 26,
+    name: 'Durchmesser',
+    type: 'dynamic',
+    count: 1,
+    values: [{ id: 130, name: '5 mm', count: 5 }],
+  },
+  {
+    id: 'feedback',
+    name: 'Bewertung',
+    type: 'feedback',
+    count: 1,
+    values: [],
+  },
+];
+
+const product = (name: string, description = '', path = '') =>
+  ({ testName: name, testDescription: description, testPath: path }) as unknown as Product;
+
+describe('Screw Finder matching', () => {
+  it('should resolve live dynamic facets by normalized names', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+
+    expect(resolved.material?.id).toBe(22);
+    expect(resolved.head?.id).toBe(21);
+    expect(resolved.diameter?.id).toBe(26);
+    expect(Object.values(resolved)).not.toContain(facets[3]);
+  });
+
+  it('should enforce A4 for a highly corrosive beginner environment', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+    const filters = getRequiredFacetFilters({ path: 'beginner', environment: 'corrosive' }, resolved);
+
+    expect(filters.map((filter) => filter.id)).toEqual([97]);
+  });
+
+  it('should create separate A2 and A4 exact-result branches for outdoor use', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+    const branches = getRequiredFacetFilterBranches(
+      { path: 'beginner', environment: 'outdoor', diameter: facets[2]?.values?.[0] },
+      resolved,
+    );
+
+    expect(branches.map(serializeFacetFilters)).toEqual(['96,130', '97,130']);
+    expect(
+      getSafetyCriticalFilterBranches({ path: 'beginner', environment: 'outdoor' }, resolved).map(
+        serializeFacetFilters,
+      ),
+    ).toEqual(['96', '97']);
+  });
+
+  it('should reject corrosive recommendations when the live facets do not provide A4', () => {
+    const resolved = resolveScrewFinderFacets([{ ...facets[0]!, values: [{ id: 96, name: 'A2', count: 4 }] }]);
+
+    expect(hasRequiredSafetyFilters({ path: 'beginner', environment: 'corrosive' }, resolved)).toBe(false);
+  });
+
+  it('should reject outdoor recommendations when the live material facet is unavailable', () => {
+    expect(hasRequiredSafetyFilters({ path: 'beginner', environment: 'outdoor' }, {})).toBe(false);
+  });
+
+  it('should allow outdoor recommendations when either A2 or A4 is available', () => {
+    const resolved = resolveScrewFinderFacets([{ ...facets[0]!, values: [{ id: 97, name: 'A4', count: 2 }] }]);
+
+    expect(hasRequiredSafetyFilters({ path: 'beginner', environment: 'outdoor' }, resolved)).toBe(true);
+  });
+
+  it('should infer outdoor material safety when an outdoor application skips the environment question', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+
+    const terraceBranches = getRequiredFacetFilterBranches({ path: 'beginner', application: 'terrace' }, resolved);
+    const roofingSafetyBranches = getSafetyCriticalFilterBranches(
+      { path: 'beginner', application: 'roofing' },
+      resolved,
+    );
+
+    expect(terraceBranches.map(serializeFacetFilters)).toEqual(['96', '97']);
+    expect(roofingSafetyBranches.map(serializeFacetFilters)).toEqual(['96', '97']);
+    expect(hasRequiredSafetyFilters({ path: 'beginner', application: 'terrace' }, {})).toBe(false);
+    expect(hasRequiredSafetyFilters({ path: 'beginner', application: 'interior' }, {})).toBe(true);
+  });
+
+  it('should preserve every selected professional specification', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+    const filters = getRequiredFacetFilters(
+      {
+        path: 'professional',
+        material: facets[0]?.values?.[0],
+        head: facets[1]?.values?.[0],
+        diameter: facets[2]?.values?.[0],
+      },
+      resolved,
+    );
+
+    expect(serializeFacetFilters(filters)).toBe('96,82,130');
+  });
+
+  it('should always target the exact matched variation in finder product links', () => {
+    const matchedProduct = {
+      testPath: 'schrauben/terrassenschraube',
+      testItemId: '613',
+      testVariationId: 4172,
+    } as unknown as Product;
+
+    expect(buildScrewFinderProductPath(matchedProduct)).toBe('/schrauben/terrassenschraube_613_4172');
+  });
+
+  it('should keep only material as a professional alternative safety constraint', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+    const filters = getSafetyCriticalFilters(
+      {
+        path: 'professional',
+        material: facets[0]?.values?.[0],
+        head: facets[1]?.values?.[0],
+        diameter: facets[2]?.values?.[0],
+      },
+      resolved,
+    );
+
+    expect(serializeFacetFilters(filters)).toBe('96');
+  });
+
+  it('should rank application-specific products before generic products', () => {
+    const ranked = rankScrewFinderProducts(
+      [
+        product('Universalschraube'),
+        product('Terrassenschraube A2', 'Für Terrassendielen und Außenanwendung'),
+        product('Schnellbauschraube', 'Für Gipskarton'),
+      ],
+      { path: 'beginner', application: 'terrace', environment: 'outdoor' },
+    );
+
+    expect((ranked[0]?.product as Product & { testName?: string }).testName).toBe('Terrassenschraube A2');
+    expect(ranked[0]?.reasons).toContain('applicationSuitable');
+  });
+
+  it('should keep negative application matches out of exact results and classify them as alternatives', () => {
+    const drywallProduct = product('Schnellbauschraube für Gipskarton');
+    const answers = { path: 'beginner', application: 'terrace', environment: 'outdoor' } as const;
+
+    const exactMatches = rankScrewFinderProducts([drywallProduct, product('Terrassenschraube A2')], answers);
+    const nearbyMatches = buildNearbyMatches([drywallProduct], answers);
+
+    expect(exactMatches).toHaveLength(1);
+    expect((exactMatches[0]?.product as Product & { testName?: string }).testName).toContain('Terrassenschraube');
+    expect(nearbyMatches[0]?.exact).toBe(false);
+    expect(nearbyMatches[0]?.criteria).toContainEqual({
+      key: 'application',
+      selectedValue: 'terrace',
+      status: 'mismatch',
+    });
+  });
+
+  it('should expose language-neutral reason and beginner criterion keys', () => {
+    const ranked = rankScrewFinderProducts(
+      [product('Terrassenschraube A4', 'Für Terrassendielen und Außenanwendung')],
+      {
+        path: 'beginner',
+        application: 'terrace',
+        environment: 'corrosive',
+        headPreference: 'flush',
+        demand: 'heavy',
+      },
+    );
+
+    expect(ranked[0]?.reasons).toEqual(expect.arrayContaining(['applicationSuitable', 'corrosionResistant']));
+    expect(ranked[0]?.criteria).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: 'application', selectedValue: 'terrace' }),
+        expect.objectContaining({ key: 'environment', selectedValue: 'corrosive' }),
+        expect.objectContaining({ key: 'headPreference', selectedValue: 'flush' }),
+        expect.objectContaining({ key: 'demand', selectedValue: 'heavy' }),
+      ]),
+    );
+  });
+
+  it('should label nearby professional matches and list unconfirmed specifications', () => {
+    const matches = buildNearbyMatches(
+      [product('Spanplattenschraube Senkkopf 5 mm')],
+      {
+        path: 'professional',
+        material: { id: 97, name: 'A4' },
+        head: { id: 83, name: 'Tellerkopf' },
+        diameter: { id: 130, name: '5 mm' },
+      },
+      1,
+      { facets: resolveScrewFinderFacets(facets) },
+    );
+
+    expect(matches[0]?.exact).toBe(false);
+    expect(matches[0]?.criteria).toEqual([
+      { key: 'material', selectedValue: 'A4', status: 'unknown' },
+      {
+        key: 'head',
+        selectedValue: 'Tellerkopf',
+        actualValue: 'Senkkopf',
+        status: 'mismatch',
+      },
+      { key: 'diameter', selectedValue: '5 mm', status: 'match' },
+    ]);
+    expect(matches[0]?.differences).toEqual(['head: Senkkopf statt Tellerkopf.']);
+  });
+
+  it('should mark exact professional criteria as confirmed by the filtered response', () => {
+    const criteria = buildMatchCriteria(
+      product('Produkt ohne auslesbare Spezifikationen'),
+      {
+        path: 'professional',
+        material: { id: 97, name: 'A4' },
+        diameter: { id: 130, name: '5 mm' },
+      },
+      true,
+      { facets: resolveScrewFinderFacets(facets) },
+    );
+
+    expect(criteria.map((criterion) => criterion.status)).toEqual(['match', 'match']);
+  });
+
+  it('should rank a dimension-only alternative ahead of a head-and-dimension mismatch', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+    const matches = buildNearbyMatches(
+      [product('Spanplattenschraube Tellerkopf 4 mm'), product('Spanplattenschraube Senkkopf 4 mm')],
+      {
+        path: 'professional',
+        material: { id: 96, name: 'A2' },
+        head: { id: 82, name: 'Senkkopf' },
+        diameter: { id: 130, name: '5 mm' },
+      },
+      2,
+      { facets: resolved, confirmedFilters: [{ id: 96, name: 'A2' }] },
+    );
+
+    expect((matches[0]?.product as Product & { testName?: string }).testName).toContain('Senkkopf');
+    expect(matches[0]?.criteria.find((criterion) => criterion.key === 'material')?.status).toBe('match');
+  });
+
+  it('should expose selectable product dimensions as available near misses', () => {
+    const alternative = product('Pfostenverbinderschraube') as Product;
+    alternative.variationAttributeMap = {
+      variations: [],
+      attributes: [
+        {
+          attributeId: 1,
+          position: 1,
+          name: 'Abmessung',
+          type: 'select',
+          values: [
+            { attributeValueId: 1, position: 1, imageUrl: '', name: '8,0 x 40 mm' },
+            { attributeValueId: 2, position: 2, imageUrl: '', name: '8,0 x 50 mm' },
+            { attributeValueId: 3, position: 3, imageUrl: '', name: '8,0 x 100 mm' },
+          ],
+        },
+      ],
+    };
+
+    const criteria = buildMatchCriteria(
+      alternative,
+      {
+        path: 'professional',
+        diameter: { id: 150, name: '10 mm' },
+        length: { id: 173, name: '50 mm' },
+      },
+      false,
+      { facets: resolveScrewFinderFacets(facets) },
+    );
+
+    expect(criteria).toEqual([
+      {
+        key: 'diameter',
+        selectedValue: '10 mm',
+        availableValues: ['8 mm'],
+        status: 'available',
+      },
+      { key: 'length', selectedValue: '50 mm', status: 'match' },
+    ]);
+  });
+
+  it('should parse package quantities without embedding a locale-specific unit', () => {
+    const alternative = product('Magazinierte Schraube, 1.000 Stück') as Product;
+    alternative.groupedAttributes = [{ attributePosition: 1, name: 'Packungsmenge', value: '5.000 Stück' }];
+
+    const criteria = buildMatchCriteria(
+      alternative,
+      {
+        path: 'professional',
+        package: { id: 128, name: '2500 Stück' },
+      },
+      false,
+    );
+
+    expect(criteria).toEqual([
+      {
+        key: 'package',
+        selectedValue: '2500 Stück',
+        availableValues: ['1000', '5000'],
+        status: 'available',
+      },
+    ]);
+  });
+});

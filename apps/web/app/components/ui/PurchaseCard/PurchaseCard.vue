@@ -15,7 +15,7 @@
                 :class="{ 'ring-2 ring-blue-500 ring-offset-1 rounded': highlightedUuid === key.uuid }"
                 :data-uuid="key.uuid"
                 class="mb-2 font-normal typography-text-sm break-words no-preflight rte-prose rte-prose--render transition-all duration-300"
-                v-html="replacePropertyPlaceholdersInHtml(key.content, props.product)"
+                v-html="renderTextBlock(key.content)"
               />
             </template>
             <template v-if="key === 'itemName' && configuration?.fields.itemName">
@@ -132,6 +132,7 @@
               <div class="mt-4">
                 <div class="flex flex-col @md:flex-row flex-wrap gap-4">
                   <UiQuantitySelector
+                    v-if="productGetters.isActiveVariationSalable(product)"
                     :min-value="productGetters.getMinimumOrderQuantity(product)"
                     :value="quantitySelectorValue"
                     class="min-w-[145px] flex-grow-0 flex-shrink-0 basis-0"
@@ -315,9 +316,17 @@ const { isWishlistItem } = useWishlist();
 const { openQuickCheckout } = useQuickCheckout();
 const { crossedPrice } = useProductPrice(props?.product);
 const { reviewArea } = useProductReviews(Number(productGetters.getId(props?.product)));
-const { getSetting: getNotifyMeSetting } = useSiteSettings('showNotifyMe');
-const showNotifyMe = computed(() => getNotifyMeSetting().toString() === 'true');
+const { getBooleanSetting: getNotifyMeSetting } = useSiteSettings('showNotifyMe');
+const showNotifyMe = computed(() => getNotifyMeSetting());
 const localePath = useLocalePath();
+const router = useRouter();
+const { resolvePathTrailingSlash } = useUrlTrailingSlash();
+
+const renderTextBlock = (html: string): string =>
+  replacePropertyPlaceholdersInHtml(
+    localizeHtmlLinks(html, router, localePath, resolvePathTrailingSlash),
+    props.product,
+  );
 
 const inlineStyle = computed(() => {
   const layout = props?.configuration?.layout || ({} as PriceCardPadding);

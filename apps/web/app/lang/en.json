@@ -336,7 +336,8 @@
     },
     "googlePay": {
       "paymentInProgress": "Payment in progress..."
-    }
+    },
+    "guaranteeNotice": "Your legal guarantee rights"
   },
   "customAssets": {
     "assetDeletedSuccessfully": "Asset deleted successfully",
@@ -869,6 +870,13 @@
     "confirmation": {
       "newsletterOptInMessage": "Your email address has been confirmed.",
       "newsletterOptInMessageError": "An error occurred while confirming your email."
+    },
+    "unsubscribe": {
+      "label": "Newsletter Unsubscribe",
+      "heading": "Unsubscribe from Newsletter",
+      "info": "Enter your email address below to unsubscribe from our newsletter.",
+      "submit": "Unsubscribe",
+      "success": "You have been successfully unsubscribed from our newsletter."
     }
   },
   "offers": {
@@ -1019,9 +1027,12 @@
     }
   },
   "previewModeBar": {
+    "configId": "Configuration ID:",
     "exitEditor": "Exit editor and visit live shop",
+    "exitPreviewMode": "Exit preview mode",
     "exitWithoutSaving": "Exit without saving",
-    "label": "Editor controls",
+    "editorLabel": "Editor controls",
+    "previewLabel": "Preview controls",
     "saveAndExit": "Save changes and exit",
     "title": "Exit editor and visit live shop?",
     "unsavedChangesWarning": "You have unsaved changes."
