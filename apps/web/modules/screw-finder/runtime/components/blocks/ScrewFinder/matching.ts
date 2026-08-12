@@ -244,7 +244,7 @@ const availableAttributeValues = (product: Product, key: ScrewFinderFacetKey) =>
   if (key === 'package') {
     const values = [
       ...productDetailText(product).matchAll(/(\d{1,3}(?:[.\s]\d{3})+|\d+)\s*(?:stück|stueck|stuck|pcs?)/gi),
-    ].map((match) => `${match[1]!.replaceAll(/[.\s]/g, '')} Stück`);
+    ].map((match) => match[1]!.replaceAll(/[.\s]/g, ''));
     return uniqueNaturalValues(values);
   }
 

@@ -401,7 +401,7 @@
                           <span>
                             <strong>{{ criterionLabel(criterion.key) }}:</strong>
                             <span v-if="criterion.status === 'available'" class="ml-1">
-                              {{ t('availableIn', { values: formatAvailableValues(criterion.availableValues ?? []) }) }}
+                              {{ t('availableIn', { values: criterionAvailableValues(criterion) }) }}
                             </span>
                             <span v-else class="ml-1">{{
                               criterion.actualValue ?? criterionSelectedValue(criterion)
@@ -596,7 +596,7 @@ const hasUsableBeginnerDimensions = computed(
 );
 const beginnerStages = computed(() => [
   'application',
-  'environment',
+  ...(resolvedContent.value.stages.beginnerEnvironment ? ['environment'] : []),
   ...(resolvedContent.value.stages.beginnerHead && beginnerRule.value.headPreferences.length > 1
     ? ['head-preference']
     : []),
@@ -912,6 +912,12 @@ const formatAvailableValues = (values: string[]) =>
         values: values.slice(0, 4).join(', '),
         count: values.length - 4,
       });
+const criterionAvailableValues = (criterion: ScrewFinderMatch['criteria'][number]) =>
+  formatAvailableValues(
+    (criterion.availableValues ?? []).map((value) =>
+      criterion.key === 'package' ? t('packageQuantity', { count: value }) : value,
+    ),
+  );
 const updateBeginnerSize = (key: 'diameter' | 'length', filter?: Filter) => {
   const changed = String(answers[key]?.id ?? '') !== String(filter?.id ?? '');
   answers[key] = filter;
@@ -1494,6 +1500,7 @@ void loadFacets();
     "selectedInstead": "gewählt: {value}",
     "availableIn": "Verfügbar in {values}",
     "availableValuesPreview": "{values} und {count} weitere",
+    "packageQuantity": "{count} Stück",
     "notVerifiable": "nicht verifizierbar",
     "reasons": {
       "applicationSuitable": "Geeignet für {application}",
@@ -1639,6 +1646,7 @@ void loadFacets();
     "selectedInstead": "selected: {value}",
     "availableIn": "Available in {values}",
     "availableValuesPreview": "{values} and {count} more",
+    "packageQuantity": "{count} pcs",
     "notVerifiable": "not verifiable",
     "reasons": {
       "applicationSuitable": "Suitable for {application}",

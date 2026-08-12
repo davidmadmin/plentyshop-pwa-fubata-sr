@@ -310,7 +310,7 @@ describe('Screw Finder matching', () => {
     ]);
   });
 
-  it('should parse localized package quantities without producing a 000 Stück suffix', () => {
+  it('should parse package quantities without embedding a locale-specific unit', () => {
     const alternative = product('Magazinierte Schraube, 1.000 Stück') as Product;
     alternative.groupedAttributes = [{ attributePosition: 1, name: 'Packungsmenge', value: '5.000 Stück' }];
 
@@ -327,7 +327,7 @@ describe('Screw Finder matching', () => {
       {
         key: 'package',
         selectedValue: '2500 Stück',
-        availableValues: ['1000 Stück', '5000 Stück'],
+        availableValues: ['1000', '5000'],
         status: 'available',
       },
     ]);

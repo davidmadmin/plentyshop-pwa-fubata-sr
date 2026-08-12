@@ -120,6 +120,36 @@ describe('ScrewFinder', () => {
     expect(wrapper.find('[data-testid="screw-finder-answer-summary"]').exists()).toBe(false);
   });
 
+  it('should skip the beginner environment question when it is disabled in persisted content', async () => {
+    const wrapper = mount(ScrewFinder, {
+      props: {
+        ...props,
+        content: {
+          ...props.content,
+          stages: {
+            beginnerEnvironment: false,
+            beginnerHead: false,
+            beginnerDemand: false,
+            beginnerExactSize: false,
+          },
+        },
+      },
+    });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="screw-finder-beginner"]').trigger('click');
+    await waitForTransition();
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Furniture & interior'))
+      ?.trigger('click');
+    await waitForTransition();
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('What are you fastening?');
+    expect(wrapper.text()).not.toContain('Where will the screw be used?');
+  });
+
   it('should keep navigation state independent between block instances', async () => {
     const first = mount(ScrewFinder, { props: { ...props, meta: { uuid: 'finder-a' } } });
     const second = mount(ScrewFinder, { props: { ...props, meta: { uuid: 'finder-b' } } });
