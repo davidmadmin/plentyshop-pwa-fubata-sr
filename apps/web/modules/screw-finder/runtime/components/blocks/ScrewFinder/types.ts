@@ -7,6 +7,14 @@ export type ScrewFinderHeadPreference = 'flush' | 'low-profile' | 'clamping' | '
 export type ScrewFinderDemand = 'light' | 'general' | 'heavy';
 export type ScrewFinderFacetKey = 'material' | 'head' | 'drive' | 'diameter' | 'length' | 'package';
 export type ScrewFinderCriterionKey = ScrewFinderFacetKey | 'application' | 'environment' | 'headPreference' | 'demand';
+export type ScrewFinderReasonKey =
+  | 'applicationSuitable'
+  | 'headPreference'
+  | 'demand'
+  | 'corrosionResistant'
+  | 'selectedSize'
+  | 'technicalFilters'
+  | 'nearby';
 export type ScrewFinderBeginnerGuidance = {
   headPreferences: ScrewFinderHeadPreference[];
   demands: ScrewFinderDemand[];
@@ -80,7 +88,7 @@ export type ScrewFinderMatch = {
   product: Product;
   score: number;
   exact: boolean;
-  reasons: string[];
+  reasons: ScrewFinderReasonKey[];
   differences: string[];
   criteria: ScrewFinderCriterion[];
 };

@@ -6,6 +6,7 @@ import type {
   ScrewFinderFacetKey,
   ScrewFinderFacetMap,
   ScrewFinderMatch,
+  ScrewFinderReasonKey,
 } from './types';
 
 const normalize = (value = '') =>
@@ -25,36 +26,30 @@ const facetAliases: Record<ScrewFinderFacetKey, string[]> = {
   package: ['menge', 'packungsinhalt', 'quantity', 'package'],
 };
 
-const applicationRules: Record<ScrewFinderApplication, { positive: string[]; negative: string[]; label: string }> = {
+const applicationRules: Record<ScrewFinderApplication, { positive: string[]; negative: string[] }> = {
   interior: {
     positive: ['spanplatte', 'mobel', 'innenbereich', 'holzschraube', 'senkkopf'],
     negative: ['gipskarton', 'fensterrahmen', 'spengler'],
-    label: 'Möbel und Innenausbau',
   },
   structural: {
     positive: ['konstruktiver holzbau', 'tragende', 'eta', 'tellerkopf', 'pfosten', 'vollgewinde'],
     negative: ['gipskarton', 'spengler'],
-    label: 'konstruktiven Holzbau',
   },
   terrace: {
     positive: ['terrasse', 'terrassendiele', 'aussenanwendung', 'edelstahl', 'a2', 'a4'],
     negative: ['gipskarton', 'innenbereich'],
-    label: 'Terrasse und Außenbereich',
   },
   drywall: {
     positive: ['gipskarton', 'trockenbau', 'gipsfaser', 'schnellbauschraube', 'trompetenkopf'],
     negative: ['terrasse', 'fensterrahmen', 'spengler'],
-    label: 'Trockenbau',
   },
   window: {
     positive: ['fensterrahmen', 'fenstermontage', 'rahmenschraube', 'fenster'],
     negative: ['gipskarton', 'terrassendiele'],
-    label: 'Fenster- und Rahmenmontage',
   },
   roofing: {
     positive: ['spengler', 'dach', 'fassade', 'epdm', 'blech'],
     negative: ['gipskarton', 'mobel'],
-    label: 'Dach und Blech',
   },
 };
 
@@ -181,7 +176,7 @@ const productSearchText = (product: Product) =>
   );
 
 const preferenceSignals = (answers: ScrewFinderAnswers) => {
-  const signals: { terms: string[]; reason: string; weight: number }[] = [];
+  const signals: { terms: string[]; reason: ScrewFinderReasonKey; weight: number }[] = [];
   const headSignals = {
     flush: ['senkkopf'],
     'low-profile': ['linsenkopf', 'flachkopf'],
@@ -198,12 +193,12 @@ const preferenceSignals = (answers: ScrewFinderAnswers) => {
   if (answers.headPreference && answers.headPreference !== 'any') {
     signals.push({
       terms: headSignals[answers.headPreference],
-      reason: 'passt zur gewünschten Kopfform',
+      reason: 'headPreference',
       weight: 3,
     });
   }
   if (answers.demand) {
-    signals.push({ terms: demandSignals[answers.demand], reason: 'passt zur Belastung', weight: 2 });
+    signals.push({ terms: demandSignals[answers.demand], reason: 'demand', weight: 2 });
   }
 
   return signals;
@@ -319,44 +314,32 @@ export const buildMatchCriteria = (
     const negative = rule.negative.some((term) => text.includes(normalize(term)));
     criteria.push({
       key: 'application',
-      selectedValue: rule.label,
+      selectedValue: answers.application,
       status: positive ? 'match' : negative ? 'mismatch' : 'unknown',
     });
   }
   if (answers.environment) {
-    const environmentLabels = {
-      indoor: 'Trockener Innenraum',
-      protected: 'Feucht, aber geschützt',
-      outdoor: 'Direkt bewittert',
-      corrosive: 'Stark korrosiv',
-    };
     criteria.push({
       key: 'environment',
-      selectedValue: environmentLabels[answers.environment],
+      selectedValue: answers.environment,
       status: exact && (answers.environment === 'outdoor' || answers.environment === 'corrosive') ? 'match' : 'unknown',
     });
   }
   if (answers.headPreference && answers.headPreference !== 'any') {
     const signal = preferenceSignals(answers)[0];
-    const headLabels = {
-      flush: 'Bündig',
-      'low-profile': 'Flach aufliegend',
-      clamping: 'Stark klemmend',
-      concealed: 'Nahezu unsichtbar',
-    };
     criteria.push({
       key: 'headPreference',
-      selectedValue: headLabels[answers.headPreference],
+      selectedValue: answers.headPreference,
       status: signal?.terms.some((term) => text.includes(normalize(term))) ? 'match' : 'unknown',
     });
   }
   if (answers.demand) {
     const signal = preferenceSignals({ ...answers, headPreference: undefined }).find(
-      (preference) => preference.reason === 'passt zur Belastung',
+      (preference) => preference.reason === 'demand',
     );
     criteria.push({
       key: 'demand',
-      selectedValue: { light: 'Leicht', general: 'Allgemein', heavy: 'Hoch' }[answers.demand],
+      selectedValue: answers.demand,
       status: signal?.terms.some((term) => text.includes(normalize(term))) ? 'match' : 'unknown',
     });
   }
@@ -378,16 +361,19 @@ export const rankScrewFinderProducts = (
   const preferences = preferenceSignals(answers);
 
   return products
-    .map((product, index) => {
+    .flatMap((product, index) => {
       const text = productSearchText(product);
-      const reasons: string[] = [];
+      const reasons: ScrewFinderReasonKey[] = [];
       let score = Math.max(0, 100 - index) / 100;
 
       if (application) {
         const positiveHits = application.positive.filter((term) => text.includes(normalize(term))).length;
         const negativeHits = application.negative.filter((term) => text.includes(normalize(term))).length;
+        if (positiveHits === 0 && negativeHits > 0) {
+          return [];
+        }
         score += positiveHits * 5 - negativeHits * 7;
-        if (positiveHits) reasons.push(`geeignet für ${application.label}`);
+        if (positiveHits) reasons.push('applicationSuitable');
       }
 
       for (const preference of preferences) {
@@ -398,19 +384,21 @@ export const rankScrewFinderProducts = (
       }
 
       if (answers.environment === 'outdoor' || answers.environment === 'corrosive') {
-        reasons.push('korrosionsbeständiger Werkstoff');
+        reasons.push('corrosionResistant');
       }
-      if (answers.diameter || answers.length) reasons.push('entspricht der gewählten Größe');
-      if (answers.path === 'professional') reasons.push('entspricht den technischen Filtern');
+      if (answers.diameter || answers.length) reasons.push('selectedSize');
+      if (answers.path === 'professional') reasons.push('technicalFilters');
 
-      return {
-        product,
-        score,
-        exact: true,
-        reasons: [...new Set(reasons)].slice(0, 3),
-        differences: [],
-        criteria: buildMatchCriteria(product, answers, true, { facets }),
-      };
+      return [
+        {
+          product,
+          score,
+          exact: true,
+          reasons: [...new Set(reasons)].slice(0, 3),
+          differences: [],
+          criteria: buildMatchCriteria(product, answers, true, { facets }),
+        },
+      ];
     })
     .sort((left, right) => right.score - left.score)
     .slice(0, limit);
@@ -423,7 +411,7 @@ export const buildNearbyMatches = (
   context: { facets?: ScrewFinderFacetMap; confirmedFilters?: Filter[] } = {},
 ): ScrewFinderMatch[] =>
   products
-    .map((product, index) => {
+    .map<ScrewFinderMatch>((product, index) => {
       const facets = context.facets ?? {};
       const confirmedFilters = context.confirmedFilters ?? [];
       const criteria = buildMatchCriteria(product, answers, false, {
@@ -459,7 +447,7 @@ export const buildNearbyMatches = (
         product,
         score: -distance - index / 1000,
         exact: false,
-        reasons: ['ähnliche Schraube aus dem aktuellen Sortiment'],
+        reasons: ['nearby'],
         differences,
         criteria,
       };

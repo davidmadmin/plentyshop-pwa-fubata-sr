@@ -379,7 +379,7 @@
                         <span>{{ productGetters.getTotalReviews(match.product) }}</span>
                       </div>
                       <p class="mt-1 line-clamp-1 text-xs leading-5 text-white/64">
-                        {{ match.reasons.join(' · ') }}
+                        {{ matchReasons(match) }}
                       </p>
                       <ul
                         v-if="match.criteria.length"
@@ -403,9 +403,11 @@
                             <span v-if="criterion.status === 'available'" class="ml-1">
                               {{ t('availableIn', { values: formatAvailableValues(criterion.availableValues ?? []) }) }}
                             </span>
-                            <span v-else class="ml-1">{{ criterion.actualValue ?? criterion.selectedValue }}</span>
+                            <span v-else class="ml-1">{{
+                              criterion.actualValue ?? criterionSelectedValue(criterion)
+                            }}</span>
                             <span v-if="criterion.status === 'mismatch'" class="ml-1">
-                              ({{ t('selectedInstead', { value: criterion.selectedValue }) }})
+                              ({{ t('selectedInstead', { value: criterionSelectedValue(criterion) }) }})
                             </span>
                             <span v-else-if="criterion.status === 'unknown'" class="ml-1">
                               ({{ t('notVerifiable') }})
@@ -473,6 +475,7 @@ import type {
   ScrewFinderHeadPreference,
   ScrewFinderMatch,
   ScrewFinderProps,
+  ScrewFinderReasonKey,
 } from './types';
 import { resolveScrewFinderContent } from './defaults';
 import { getBeginnerGuidance } from './beginner-guidance';
@@ -922,6 +925,29 @@ const requestResults = () => {
   void runPreparedTransition((acknowledged) => showResults(acknowledged));
 };
 const criterionLabel = (key: ScrewFinderCriterionKey) => t(`summary.${key}`);
+const criterionSelectedValue = (criterion: ScrewFinderMatch['criteria'][number]) => {
+  if (criterion.key === 'application') {
+    return t(`applications.${criterion.selectedValue}`);
+  }
+  if (criterion.key === 'environment') {
+    return t(`environments.${criterion.selectedValue}`);
+  }
+  if (criterion.key === 'headPreference') {
+    const key = criterion.selectedValue === 'low-profile' ? 'lowProfile' : criterion.selectedValue;
+    return t(`heads.${key}`);
+  }
+  if (criterion.key === 'demand') {
+    return t(`demands.${criterion.selectedValue}`);
+  }
+  return criterion.selectedValue;
+};
+const matchReason = (reason: ScrewFinderReasonKey) =>
+  reason === 'applicationSuitable'
+    ? t('reasons.applicationSuitable', {
+        application: answers.application ? t(`applications.${answers.application}`) : '',
+      })
+    : t(`reasons.${reason}`);
+const matchReasons = (match: ScrewFinderMatch) => match.reasons.map(matchReason).join(' · ');
 const criterionStatusIcon = (status: ScrewFinderCriterionStatus) =>
   status === 'match' ? '✓' : status === 'mismatch' ? '×' : status === 'available' ? '!' : '?';
 const criterionStatusClass = (status: ScrewFinderCriterionStatus) =>
@@ -1234,8 +1260,10 @@ const showResults = async (acknowledged: Promise<boolean> = Promise.resolve(true
       if (requestId !== resultsRequestId) {
         return;
       }
-      const exactVariationIds = new Set(exactProducts.map((product) => String(productGetters.getVariationId(product))));
-      const exactItemIds = new Set(exactProducts.map((product) => String(productGetters.getItemId(product))));
+      const exactVariationIds = new Set(
+        matches.value.map((match) => String(productGetters.getVariationId(match.product))),
+      );
+      const exactItemIds = new Set(matches.value.map((match) => String(productGetters.getItemId(match.product))));
       const uniqueAlternatives = uniqueProductsByItem(
         alternativeProducts.filter(
           (product) =>
@@ -1467,6 +1495,15 @@ void loadFacets();
     "availableIn": "Verfügbar in {values}",
     "availableValuesPreview": "{values} und {count} weitere",
     "notVerifiable": "nicht verifizierbar",
+    "reasons": {
+      "applicationSuitable": "Geeignet für {application}",
+      "headPreference": "Passt zur gewünschten Kopfform",
+      "demand": "Passt zur Belastung",
+      "corrosionResistant": "Korrosionsbeständiger Werkstoff",
+      "selectedSize": "Entspricht der gewählten Größe",
+      "technicalFilters": "Entspricht den technischen Filtern",
+      "nearby": "Ähnliche Schraube aus dem aktuellen Sortiment"
+    },
     "productDetails": "Produkt ansehen",
     "adjustAnswers": "Auswahl anpassen",
     "loading": "Passende Produkte werden geladen.",
@@ -1603,6 +1640,15 @@ void loadFacets();
     "availableIn": "Available in {values}",
     "availableValuesPreview": "{values} and {count} more",
     "notVerifiable": "not verifiable",
+    "reasons": {
+      "applicationSuitable": "Suitable for {application}",
+      "headPreference": "Matches the preferred head finish",
+      "demand": "Matches the required load",
+      "corrosionResistant": "Corrosion-resistant material",
+      "selectedSize": "Matches the selected size",
+      "technicalFilters": "Matches the technical filters",
+      "nearby": "Similar screw from the current catalog"
+    },
     "productDetails": "View product",
     "adjustAnswers": "Adjust selection",
     "loading": "Loading matching products.",

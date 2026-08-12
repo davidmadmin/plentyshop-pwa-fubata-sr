@@ -166,7 +166,47 @@ describe('Screw Finder matching', () => {
     );
 
     expect((ranked[0]?.product as Product & { testName?: string }).testName).toBe('Terrassenschraube A2');
-    expect(ranked[0]?.reasons).toContain('geeignet für Terrasse und Außenbereich');
+    expect(ranked[0]?.reasons).toContain('applicationSuitable');
+  });
+
+  it('should keep negative application matches out of exact results and classify them as alternatives', () => {
+    const drywallProduct = product('Schnellbauschraube für Gipskarton');
+    const answers = { path: 'beginner', application: 'terrace', environment: 'outdoor' } as const;
+
+    const exactMatches = rankScrewFinderProducts([drywallProduct, product('Terrassenschraube A2')], answers);
+    const nearbyMatches = buildNearbyMatches([drywallProduct], answers);
+
+    expect(exactMatches).toHaveLength(1);
+    expect((exactMatches[0]?.product as Product & { testName?: string }).testName).toContain('Terrassenschraube');
+    expect(nearbyMatches[0]?.exact).toBe(false);
+    expect(nearbyMatches[0]?.criteria).toContainEqual({
+      key: 'application',
+      selectedValue: 'terrace',
+      status: 'mismatch',
+    });
+  });
+
+  it('should expose language-neutral reason and beginner criterion keys', () => {
+    const ranked = rankScrewFinderProducts(
+      [product('Terrassenschraube A4', 'Für Terrassendielen und Außenanwendung')],
+      {
+        path: 'beginner',
+        application: 'terrace',
+        environment: 'corrosive',
+        headPreference: 'flush',
+        demand: 'heavy',
+      },
+    );
+
+    expect(ranked[0]?.reasons).toEqual(expect.arrayContaining(['applicationSuitable', 'corrosionResistant']));
+    expect(ranked[0]?.criteria).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: 'application', selectedValue: 'terrace' }),
+        expect.objectContaining({ key: 'environment', selectedValue: 'corrosive' }),
+        expect.objectContaining({ key: 'headPreference', selectedValue: 'flush' }),
+        expect.objectContaining({ key: 'demand', selectedValue: 'heavy' }),
+      ]),
+    );
   });
 
   it('should label nearby professional matches and list unconfirmed specifications', () => {
