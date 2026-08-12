@@ -827,6 +827,13 @@ const chooseApplication = (value: ScrewFinderApplication) => {
   const changed = answers.application !== value;
   answers.application = value;
   if (changed) reconcileBeginnerAnswers();
+  if (!resolvedContent.value.stages.beginnerEnvironment && resolvedContent.value.stages.beginnerExactSize) {
+    void runPreparedTransition(async (acknowledged) => {
+      await loadBeginnerDimensionCatalog();
+      await advance(acknowledged);
+    });
+    return;
+  }
   void runPreparedTransition((acknowledged) => advance(acknowledged));
 };
 const chooseAndAdvance = (key: 'environment' | 'headPreference' | 'demand', value: string) => {
@@ -1324,6 +1331,10 @@ const openAnswerSummary = (summary: ScrewFinderAnswerSummary) => {
     return;
   }
   if (summary.stage === activeStage.value) return;
+  const openedFromResults = activeStage.value === 'results';
+  if (openedFromResults) {
+    stageHistory.value = stageHistory.value.filter((stage) => stage !== 'results');
+  }
   void runPreparedTransition(async (acknowledged) => {
     if (answers.path === 'professional') {
       await loadProfessionalFacetCatalog(professionalFiltersBeforeStage(summary.stage));
@@ -1331,7 +1342,7 @@ const openAnswerSummary = (summary: ScrewFinderAnswerSummary) => {
     if (!(await acknowledged)) {
       return;
     }
-    navigateToStage(summary.stage);
+    navigateToStage(summary.stage, !openedFromResults);
   });
 };
 

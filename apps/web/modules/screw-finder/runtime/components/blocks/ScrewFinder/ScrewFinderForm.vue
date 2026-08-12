@@ -58,6 +58,10 @@
         <FinderFormSwitch v-model="finder.paths.beginner" :label="getEditorTranslation('enable-beginner')" />
         <FinderFormSwitch v-model="finder.paths.professional" :label="getEditorTranslation('enable-professional')" />
         <hr class="border-neutral-200" />
+        <FinderFormSwitch
+          v-model="finder.stages.beginnerEnvironment"
+          :label="getEditorTranslation('beginner-environment')"
+        />
         <FinderFormSwitch v-model="finder.stages.beginnerHead" :label="getEditorTranslation('beginner-head')" />
         <FinderFormSwitch v-model="finder.stages.beginnerDemand" :label="getEditorTranslation('beginner-demand')" />
         <FinderFormSwitch v-model="finder.stages.beginnerExactSize" :label="getEditorTranslation('beginner-size')" />

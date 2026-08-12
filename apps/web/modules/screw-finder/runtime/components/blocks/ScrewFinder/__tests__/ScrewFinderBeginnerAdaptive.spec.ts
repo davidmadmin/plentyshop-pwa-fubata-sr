@@ -131,6 +131,76 @@ describe('ScrewFinder adaptive beginner flow', () => {
     expect(getFacet).not.toHaveBeenCalledWith(expect.objectContaining({ itemsPerPage: 50 }));
   });
 
+  it('should load safety-filtered dimensions when the environment question is disabled', async () => {
+    const a2Diameter = { ...diameterFacet, values: [{ id: 30, name: '4 mm', count: 2 }] };
+    const a4Diameter = { ...diameterFacet, values: [{ id: 33, name: '6 mm', count: 1 }] };
+    getFacet.mockImplementation(({ facets }: { facets?: string }) => {
+      if (facets === '11') return Promise.resolve(facetResponse([materialFacet, a2Diameter, lengthFacet], 2));
+      if (facets === '12') return Promise.resolve(facetResponse([materialFacet, a4Diameter, lengthFacet], 1));
+      return Promise.resolve(facetResponse([materialFacet, diameterFacet, lengthFacet], 5));
+    });
+    const wrapper = mount(ScrewFinder, {
+      props: {
+        ...props,
+        content: {
+          ...props.content,
+          stages: { beginnerEnvironment: false, beginnerHead: false, beginnerDemand: false, beginnerExactSize: true },
+        },
+      },
+    });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="screw-finder-beginner"]').trigger('click');
+    await waitForTransition();
+    await choose(wrapper, 'Decking & outdoors');
+
+    const diameterOptions = wrapper
+      .findAll('select')[0]!
+      .findAll('option')
+      .map((option) => option.text());
+    expect(getFacet).toHaveBeenCalledWith(expect.objectContaining({ facets: '11' }));
+    expect(getFacet).toHaveBeenCalledWith(expect.objectContaining({ facets: '12' }));
+    expect(diameterOptions.some((option) => option.includes('4 mm'))).toBe(true);
+    expect(diameterOptions.some((option) => option.includes('6 mm'))).toBe(true);
+    expect(diameterOptions.some((option) => option.includes('4,5 mm'))).toBe(false);
+  });
+
+  it('should not restore stale results after editing an answer from the results page', async () => {
+    getFacet.mockImplementation(({ itemsPerPage }: { itemsPerPage?: number }) =>
+      Promise.resolve(itemsPerPage === 50 ? facetResponse([], 0) : facetResponse([materialFacet], 5)),
+    );
+    const wrapper = mount(ScrewFinder, {
+      props: {
+        ...props,
+        content: {
+          ...props.content,
+          stages: { beginnerEnvironment: true, beginnerHead: false, beginnerDemand: false, beginnerExactSize: false },
+        },
+      },
+    });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="screw-finder-beginner"]').trigger('click');
+    await waitForTransition();
+    await choose(wrapper, 'Furniture & interior');
+    await choose(wrapper, 'Dry indoor');
+    expect(wrapper.text()).toContain('No exact products found.');
+
+    await wrapper
+      .get('[data-testid="screw-finder-answer-summary"]')
+      .findAll('button')
+      .find((button) => button.text().includes('Furniture & interior'))
+      ?.trigger('click');
+    await waitForTransition();
+    await choose(wrapper, 'Drywall');
+    await wrapper.get('[data-testid="screw-finder-back"]').trigger('click');
+    await waitForTransition();
+    await wrapper.get('[data-testid="screw-finder-back"]').trigger('click');
+    await waitForTransition();
+
+    expect(wrapper.text()).not.toContain('No exact products found.');
+  });
+
   it('should clear only beginner answers that become invalid after changing the application', async () => {
     const wrapper = mount(ScrewFinder, { props });
     await flushPromises();
