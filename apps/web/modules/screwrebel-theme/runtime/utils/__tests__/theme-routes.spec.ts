@@ -10,9 +10,12 @@ describe('isScrewrebelThemeRoute', () => {
 
   it.each([
     '/cart',
+    '/de/cart',
     '/checkout',
+    '/en/checkout',
     '/readonly-checkout',
     '/guest/login',
+    '/de-DE/guest/login',
     '/login',
     '/register',
     '/my-account',
@@ -21,5 +24,9 @@ describe('isScrewrebelThemeRoute', () => {
     '/confirmation/1/access-key',
   ])('should keep the upstream theme for operational route %s', (path) => {
     expect(isScrewrebelThemeRoute(path)).toBe(false);
+  });
+
+  it.each(['/de/schrauben', '/en/product/example'])('should theme localized merchandising route %s', (path) => {
+    expect(isScrewrebelThemeRoute(path)).toBe(true);
   });
 });

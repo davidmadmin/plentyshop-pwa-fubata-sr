@@ -427,7 +427,7 @@
 
                 <div v-else class="flex flex-1 items-center justify-center text-center" role="status">
                   <div class="max-w-xl">
-                    <p class="text-white/65">{{ resolvedContent.text.emptyText }}</p>
+                    <p v-if="!facetError" class="text-white/65">{{ resolvedContent.text.emptyText }}</p>
                     <button type="button" class="finder-primary-button mt-6" @click="goBack">
                       {{ t('adjustAnswers') }}
                     </button>
@@ -481,6 +481,7 @@ import {
   getFilterName,
   getRequiredFacetFilters,
   getSafetyCriticalFilters,
+  hasRequiredSafetyFilters,
   rankScrewFinderProducts,
   resolveScrewFinderFacets,
   serializeFacetFilters,
@@ -524,6 +525,7 @@ const liveMessage = ref('');
 const automaticProfessionalKeys = ref<Set<ScrewFinderFacetKey>>(new Set());
 let professionalRequestId = 0;
 let beginnerRequestId = 0;
+let resultsRequestId = 0;
 
 const facetMap = computed(() => resolveScrewFinderFacets(facetCatalog.value?.facets ?? []));
 const beginnerFacetMap = computed(() =>
@@ -537,33 +539,39 @@ const professionalFacetMap = computed(() =>
 );
 const requiredFilters = computed(() => getRequiredFacetFilters(answers, facetMap.value));
 const safetyCriticalFilters = computed(() => getSafetyCriticalFilters(answers, facetMap.value));
+const safetyFiltersAvailable = computed(() => hasRequiredSafetyFilters(answers, facetMap.value));
 const allMatchesUrl = computed(() => {
+  if (!safetyFiltersAvailable.value) {
+    return '';
+  }
   const facets = serializeFacetFilters(requiredFilters.value);
-  const path = resolvedContent.value.sourceCategoryPath;
+  const path = localePath(resolvedContent.value.sourceCategoryPath);
   return facets ? `${path}?facets=${encodeURIComponent(facets)}` : path;
 });
 const visibleMatches = computed(() =>
   [...matches.value, ...nearbyMatches.value].slice(0, resolvedContent.value.resultCount),
 );
 const resultSummary = computed(() =>
-  matches.value.length
-    ? nearbyMatches.value.length
-      ? t(
-          matches.value.length === 1
-            ? nearbyMatches.value.length === 1
-              ? 'mixedResultSummarySingleSingle'
-              : 'mixedResultSummarySingleMultiple'
-            : nearbyMatches.value.length === 1
-              ? 'mixedResultSummaryMultipleSingle'
-              : 'mixedResultSummaryMultipleMultiple',
-          { exact: matches.value.length, alternatives: nearbyMatches.value.length },
-        )
-      : matches.value.length === 1
-        ? t('resultSummarySingle')
-        : t('resultSummary', { count: matches.value.length })
-    : nearbyMatches.value.length
-      ? t('nearbySummary')
-      : resolvedContent.value.text.emptyText,
+  facetError.value
+    ? facetError.value
+    : matches.value.length
+      ? nearbyMatches.value.length
+        ? t(
+            matches.value.length === 1
+              ? nearbyMatches.value.length === 1
+                ? 'mixedResultSummarySingleSingle'
+                : 'mixedResultSummarySingleMultiple'
+              : nearbyMatches.value.length === 1
+                ? 'mixedResultSummaryMultipleSingle'
+                : 'mixedResultSummaryMultipleMultiple',
+            { exact: matches.value.length, alternatives: nearbyMatches.value.length },
+          )
+        : matches.value.length === 1
+          ? t('resultSummarySingle')
+          : t('resultSummary', { count: matches.value.length })
+      : nearbyMatches.value.length
+        ? t('nearbySummary')
+        : resolvedContent.value.text.emptyText,
 );
 
 const beginnerRule = computed(() => getBeginnerGuidance(answers.application));
@@ -846,8 +854,11 @@ const restart = () => {
   professionalFacetCatalog.value = facetCatalog.value;
   loadingProfessionalFacets.value = false;
   loadingBeginnerFacets.value = false;
+  loadingResults.value = false;
+  facetError.value = '';
   professionalRequestId += 1;
   beginnerRequestId += 1;
+  resultsRequestId += 1;
   beginnerFacetCatalog.value = facetCatalog.value;
   beginnerLengthFacetCatalog.value = facetCatalog.value;
   preparingNextStage.value = false;
@@ -1150,17 +1161,35 @@ const openNextProfessionalStage = async (fromIndex: number, acknowledged: Promis
 };
 
 const showResults = async (acknowledged: Promise<void> = Promise.resolve()) => {
+  const requestId = ++resultsRequestId;
   professionalRequestId += 1;
   loadingProfessionalFacets.value = false;
   loadingResults.value = true;
+  facetError.value = '';
   matches.value = [];
   nearbyMatches.value = [];
+  if (!safetyFiltersAvailable.value) {
+    facetError.value = t('safetyFacetUnavailable');
+    await acknowledged;
+    if (requestId !== resultsRequestId) {
+      return;
+    }
+    navigateToStage('results');
+    loadingResults.value = false;
+    return;
+  }
   try {
     const exactProducts = await fetchAllCandidates(serializeFacetFilters(requiredFilters.value));
+    if (requestId !== resultsRequestId) {
+      return;
+    }
     matches.value = rankScrewFinderProducts(exactProducts, answers, resolvedContent.value.resultCount, facetMap.value);
     const remainingSlots = resolvedContent.value.resultCount - matches.value.length;
     if (remainingSlots > 0) {
       const alternativeProducts = await fetchAllCandidates(serializeFacetFilters(safetyCriticalFilters.value));
+      if (requestId !== resultsRequestId) {
+        return;
+      }
       const exactVariationIds = new Set(exactProducts.map((product) => String(productGetters.getVariationId(product))));
       const exactItemIds = new Set(exactProducts.map((product) => String(productGetters.getItemId(product))));
       const uniqueAlternatives = uniqueProductsByItem(
@@ -1175,22 +1204,36 @@ const showResults = async (acknowledged: Promise<void> = Promise.resolve()) => {
         confirmedFilters: safetyCriticalFilters.value,
       });
       const enrichedAlternatives = await enrichAlternativeProducts(initialAlternatives.map((match) => match.product));
+      if (requestId !== resultsRequestId) {
+        return;
+      }
       nearbyMatches.value = buildNearbyMatches(enrichedAlternatives, answers, remainingSlots, {
         facets: facetMap.value,
         confirmedFilters: safetyCriticalFilters.value,
       });
     }
     await acknowledged;
+    if (requestId !== resultsRequestId) {
+      return;
+    }
     navigateToStage('results');
     liveMessage.value = visibleMatches.value.length
       ? t('resultsLoaded', { count: visibleMatches.value.length })
       : t('noResultsLoaded');
   } catch {
+    if (requestId !== resultsRequestId) {
+      return;
+    }
     facetError.value = t('loadError');
     await acknowledged;
+    if (requestId !== resultsRequestId) {
+      return;
+    }
     navigateToStage('results');
   } finally {
-    loadingResults.value = false;
+    if (requestId === resultsRequestId) {
+      loadingResults.value = false;
+    }
   }
 };
 
@@ -1381,6 +1424,7 @@ void loadFacets();
     "resultsLoaded": "{count} passende Produkte geladen.",
     "noResultsLoaded": "Keine exakten Produkte gefunden.",
     "loadError": "Die aktuellen Produktdaten konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "safetyFacetUnavailable": "Die erforderliche A2/A4-Werkstoffprüfung ist derzeit nicht möglich. Aus Sicherheitsgründen werden keine Produktempfehlungen angezeigt.",
     "applications": {
       "interior": "Möbel & Innenausbau",
       "interiorHint": "Holz, Platten und Beschläge",
@@ -1516,6 +1560,7 @@ void loadFacets();
     "resultsLoaded": "{count} matching products loaded.",
     "noResultsLoaded": "No exact products found.",
     "loadError": "Current product data could not be loaded. Please try again.",
+    "safetyFacetUnavailable": "The required A2/A4 material check is currently unavailable. No product recommendations are shown for safety reasons.",
     "applications": {
       "interior": "Furniture & interior",
       "interiorHint": "Wood, boards and fittings",

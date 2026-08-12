@@ -114,6 +114,22 @@ export const getSafetyCriticalFilters = (answers: ScrewFinderAnswers, facets: Sc
   return [];
 };
 
+/**
+ * Confirms that beginner environment requirements can be enforced by the live material facets.
+ */
+export const hasRequiredSafetyFilters = (answers: ScrewFinderAnswers, facets: ScrewFinderFacetMap): boolean => {
+  if (answers.path !== 'beginner') {
+    return true;
+  }
+  if (answers.environment === 'outdoor') {
+    return Boolean(getFacetValue(facets.material, ['a2', 'a4']));
+  }
+  if (answers.environment === 'corrosive') {
+    return Boolean(getFacetValue(facets.material, ['a4']));
+  }
+  return true;
+};
+
 export const serializeFacetFilters = (filters: Filter[]) => filters.map((filter) => String(filter.id)).join(',');
 
 export const buildScrewFinderProductPath = (product: Product) => {

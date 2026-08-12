@@ -3,7 +3,7 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ScrewFinder from '../ScrewFinder.vue';
 
-const { getFacet } = vi.hoisted(() => ({ getFacet: vi.fn() }));
+const { getFacet, localePath } = vi.hoisted(() => ({ getFacet: vi.fn(), localePath: vi.fn() }));
 
 mockNuxtImport('useSdk', () => () => ({
   plentysystems: { getFacet },
@@ -13,7 +13,7 @@ mockNuxtImport('usePriceFormatter', () => () => ({
   format: (value: number) => `${value.toFixed(2)} €`,
 }));
 
-mockNuxtImport('useLocalePath', () => () => (path: string) => path);
+mockNuxtImport('useLocalePath', () => () => localePath);
 
 const props = {
   name: 'ScrewFinder',
@@ -84,6 +84,8 @@ describe('ScrewFinder', () => {
   beforeEach(() => {
     getFacet.mockReset();
     getFacet.mockResolvedValue(facetResponse([materialFacet, headFacet, diameterFacet]));
+    localePath.mockReset();
+    localePath.mockImplementation((path: string) => path);
   });
 
   it('should render both entry paths by default', () => {
@@ -286,7 +288,7 @@ describe('ScrewFinder', () => {
     expect(getFacet).toHaveBeenLastCalledWith(expect.objectContaining({ facets: '10,20' }));
   });
 
-  it('should include manual and automatically selected filters in the final category link', async () => {
+  it('should include manual and automatically selected filters in the localized final category link', async () => {
     const singleDiameterFacet = {
       ...diameterFacet,
       values: [{ id: 30, name: '4 mm', count: 1 }],
@@ -295,6 +297,7 @@ describe('ScrewFinder', () => {
       if (itemsPerPage === 50) return Promise.resolve(facetResponse([], 0));
       return Promise.resolve(facetResponse([materialFacet, headFacet, singleDiameterFacet], facets ? 1 : 5));
     });
+    localePath.mockImplementation((path: string) => `/de${path}`);
     const wrapper = mount(ScrewFinder, { props });
     await flushPromises();
 
@@ -308,10 +311,80 @@ describe('ScrewFinder', () => {
     await waitForTransition();
 
     expect(wrapper.get('[data-testid="screw-finder-all-matches"]').attributes('to')).toBe(
-      '/schrauben?facets=10%2C20%2C30',
+      '/de/schrauben?facets=10%2C20%2C30',
     );
+    expect(localePath).toHaveBeenCalledWith('/schrauben');
     expect(wrapper.get('[data-testid="screw-finder-answer-summary"]').text()).toContain('Edelstahl C2');
     expect(wrapper.get('[data-testid="screw-finder-answer-summary"]').text()).not.toContain('Senkkopf');
     expect(wrapper.get('[data-testid="screw-finder-answer-summary"]').text()).not.toContain('4 mm');
+  });
+
+  it('should ignore an in-flight result response after restarting', async () => {
+    getFacet.mockImplementation(({ itemsPerPage }: { itemsPerPage?: number }) => {
+      if (itemsPerPage === 50) {
+        return delayedFacetResponse([], 0, 150);
+      }
+      return Promise.resolve(facetResponse([materialFacet, headFacet, diameterFacet], 5));
+    });
+    const wrapper = mount(ScrewFinder, { props });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="screw-finder-professional"]').trigger('click');
+    await waitForTransition();
+    await wrapper
+      .get('[data-testid="screw-finder-professional-options"]')
+      .findAll('button')
+      .find((button) => button.text().includes('Edelstahl C2'))
+      ?.trigger('click');
+    await waitForTransition();
+    await wrapper
+      .get('[data-testid="screw-finder-professional-options"]')
+      .findAll('button')
+      .find((button) => button.text().includes('◇4 mm'))
+      ?.trigger('click');
+    await flushPromises();
+
+    expect(getFacet).toHaveBeenCalledWith(expect.objectContaining({ itemsPerPage: 50 }));
+    await wrapper.get('[data-testid="screw-finder-restart"]').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="screw-finder-beginner"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="screw-finder-results"]').exists()).toBe(false);
+  });
+
+  it('should not request products when a corrosive selection cannot enforce A4', async () => {
+    getFacet.mockResolvedValue(facetResponse([headFacet], 5));
+    const wrapper = mount(ScrewFinder, {
+      props: {
+        ...props,
+        content: {
+          ...props.content,
+          stages: {
+            beginnerHead: false,
+            beginnerDemand: false,
+            beginnerExactSize: false,
+          },
+        },
+      },
+    });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="screw-finder-beginner"]').trigger('click');
+    await waitForTransition();
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Decking & outdoors'))
+      ?.trigger('click');
+    await waitForTransition();
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Highly corrosive'))
+      ?.trigger('click');
+    await waitForTransition();
+
+    expect(wrapper.text()).toContain('No product recommendations are shown for safety reasons.');
+    expect(getFacet).not.toHaveBeenCalledWith(expect.objectContaining({ itemsPerPage: 50 }));
+    expect(wrapper.find('[data-testid="screw-finder-all-matches"]').exists()).toBe(false);
   });
 });

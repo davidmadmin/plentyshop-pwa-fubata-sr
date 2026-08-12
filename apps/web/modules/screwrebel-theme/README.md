@@ -42,7 +42,9 @@ The master setting has two related states:
 - `configured`: the merchant enabled the theme. Editor controls use this to show dependent settings.
 - `enabled`: the theme is configured and the current route is safe to theme.
 
-Operational routes are excluded in `runtime/utils/theme-routes.ts`. When expanding the theme to checkout, authentication or account pages, first implement and verify every form, table, validation and error state rather than removing the exclusion alone.
+Operational routes, including locale-prefixed variants such as `/de/cart`, are excluded in
+`runtime/utils/theme-routes.ts`. When expanding the theme to checkout, authentication or account pages, first
+implement and verify every form, table, validation and error state rather than removing the exclusion alone.
 
 ## Validation contract
 

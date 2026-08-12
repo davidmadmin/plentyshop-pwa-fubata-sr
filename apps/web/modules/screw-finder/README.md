@@ -12,6 +12,10 @@ The folder contains the render component, editor form, catalogue defaults, icon,
 
 Persisted block content remains backward-compatible through `resolveScrewFinderContent()`. Existing content keys and block name `ScrewFinder` must not be renamed without an explicit data migration.
 
+Outdoor and corrosive beginner recommendations fail closed when the live category facets do not expose A2/A4.
+The finder shows an unavailable message instead of querying or labelling products without the required material
+constraint.
+
 ## Validation contract
 
 For changes to this module, verify:

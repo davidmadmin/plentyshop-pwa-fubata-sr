@@ -6,6 +6,7 @@ import {
   buildNearbyMatches,
   getRequiredFacetFilters,
   getSafetyCriticalFilters,
+  hasRequiredSafetyFilters,
   rankScrewFinderProducts,
   resolveScrewFinderFacets,
   serializeFacetFilters,
@@ -79,6 +80,22 @@ describe('Screw Finder matching', () => {
     const filters = getRequiredFacetFilters({ path: 'beginner', environment: 'corrosive' }, resolved);
 
     expect(filters.map((filter) => filter.id)).toEqual([97]);
+  });
+
+  it('should reject corrosive recommendations when the live facets do not provide A4', () => {
+    const resolved = resolveScrewFinderFacets([{ ...facets[0]!, values: [{ id: 96, name: 'A2', count: 4 }] }]);
+
+    expect(hasRequiredSafetyFilters({ path: 'beginner', environment: 'corrosive' }, resolved)).toBe(false);
+  });
+
+  it('should reject outdoor recommendations when the live material facet is unavailable', () => {
+    expect(hasRequiredSafetyFilters({ path: 'beginner', environment: 'outdoor' }, {})).toBe(false);
+  });
+
+  it('should allow outdoor recommendations when either A2 or A4 is available', () => {
+    const resolved = resolveScrewFinderFacets([{ ...facets[0]!, values: [{ id: 97, name: 'A4', count: 2 }] }]);
+
+    expect(hasRequiredSafetyFilters({ path: 'beginner', environment: 'outdoor' }, resolved)).toBe(true);
   });
 
   it('should preserve every selected professional specification', () => {
