@@ -353,6 +353,79 @@ describe('ScrewFinder', () => {
     expect(wrapper.find('[data-testid="screw-finder-results"]').exists()).toBe(false);
   });
 
+  it('should cancel an in-flight result transition when navigating back', async () => {
+    getFacet.mockImplementation(({ itemsPerPage }: { itemsPerPage?: number }) => {
+      if (itemsPerPage === 50) {
+        return delayedFacetResponse([], 0, 150);
+      }
+      return Promise.resolve(facetResponse([materialFacet, headFacet, diameterFacet], 5));
+    });
+    const wrapper = mount(ScrewFinder, { props });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="screw-finder-professional"]').trigger('click');
+    await waitForTransition();
+    await wrapper
+      .get('[data-testid="screw-finder-professional-options"]')
+      .findAll('button')
+      .find((button) => button.text().includes('Edelstahl C2'))
+      ?.trigger('click');
+    await waitForTransition();
+    await wrapper
+      .get('[data-testid="screw-finder-professional-options"]')
+      .findAll('button')
+      .find((button) => button.text().includes('◇4 mm'))
+      ?.trigger('click');
+    await flushPromises();
+
+    expect(getFacet).toHaveBeenCalledWith(expect.objectContaining({ itemsPerPage: 50 }));
+    await wrapper.get('[data-testid="screw-finder-back"]').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Choose material');
+    expect(wrapper.find('[data-testid="screw-finder-results"]').exists()).toBe(false);
+  });
+
+  it('should query A2 and A4 as separate product branches for outdoor use', async () => {
+    getFacet.mockResolvedValue(facetResponse([materialFacet], 0));
+    const wrapper = mount(ScrewFinder, {
+      props: {
+        ...props,
+        content: {
+          ...props.content,
+          stages: {
+            beginnerHead: false,
+            beginnerDemand: false,
+            beginnerExactSize: false,
+          },
+        },
+      },
+    });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="screw-finder-beginner"]').trigger('click');
+    await waitForTransition();
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Decking & outdoors'))
+      ?.trigger('click');
+    await waitForTransition();
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Weather exposed'))
+      ?.trigger('click');
+    await waitForTransition();
+
+    const productFacets = getFacet.mock.calls
+      .map(([request]) => request as { facets?: string; itemsPerPage?: number })
+      .filter((request) => request.itemsPerPage === 50)
+      .map((request) => request.facets);
+    expect(productFacets).toEqual(expect.arrayContaining(['11', '12']));
+    expect(productFacets).not.toContain('11,12');
+    expect(wrapper.get('[data-testid="screw-finder-all-matches"]').attributes('to')).toBe('/schrauben?facets=11%2C12');
+  });
+
   it('should not request products when a corrosive selection cannot enforce A4', async () => {
     getFacet.mockResolvedValue(facetResponse([headFacet], 5));
     const wrapper = mount(ScrewFinder, {

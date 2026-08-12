@@ -115,6 +115,37 @@ export const getSafetyCriticalFilters = (answers: ScrewFinderAnswers, facets: Sc
 };
 
 /**
+ * Returns separately queryable exact-filter branches when multiple material values are valid.
+ */
+export const getRequiredFacetFilterBranches = (
+  answers: ScrewFinderAnswers,
+  facets: ScrewFinderFacetMap,
+): Filter[][] => {
+  const requiredFilters = getRequiredFacetFilters(answers, facets);
+  if (answers.path !== 'beginner' || answers.environment !== 'outdoor') {
+    return [requiredFilters];
+  }
+
+  const materialFilters = getSafetyCriticalFilters(answers, facets);
+  const materialFilterIds = new Set(materialFilters.map((filter) => String(filter.id)));
+  const sharedFilters = requiredFilters.filter((filter) => !materialFilterIds.has(String(filter.id)));
+  return materialFilters.map((material) => [material, ...sharedFilters]);
+};
+
+/**
+ * Returns separately queryable safety-filter branches for alternative matching.
+ */
+export const getSafetyCriticalFilterBranches = (
+  answers: ScrewFinderAnswers,
+  facets: ScrewFinderFacetMap,
+): Filter[][] => {
+  const safetyFilters = getSafetyCriticalFilters(answers, facets);
+  return answers.path === 'beginner' && answers.environment === 'outdoor'
+    ? safetyFilters.map((filter) => [filter])
+    : [safetyFilters];
+};
+
+/**
  * Confirms that beginner environment requirements can be enforced by the live material facets.
  */
 export const hasRequiredSafetyFilters = (answers: ScrewFinderAnswers, facets: ScrewFinderFacetMap): boolean => {
@@ -178,17 +209,10 @@ const preferenceSignals = (answers: ScrewFinderAnswers) => {
   return signals;
 };
 
-const professionalCriterionLabels: Record<ScrewFinderFacetKey, string> = {
-  material: 'Werkstoff',
-  head: 'Kopfform',
-  diameter: 'Durchmesser',
-  length: 'Gesamtlänge',
-  drive: 'Antrieb',
-  package: 'Packungsmenge',
-};
+const professionalCriterionKeys: ScrewFinderFacetKey[] = ['material', 'head', 'diameter', 'length', 'drive', 'package'];
 
 const selectedProfessionalFilters = (answers: ScrewFinderAnswers) =>
-  (Object.keys(professionalCriterionLabels) as ScrewFinderFacetKey[])
+  professionalCriterionKeys
     .map((key) => ({ key, filter: answers[key] as Filter | undefined }))
     .filter((entry): entry is { key: ScrewFinderFacetKey; filter: Filter } => Boolean(entry.filter));
 
@@ -245,16 +269,16 @@ const criterionForFilter = (
   const text = productSearchText(product);
   const selectedValue = getFilterName(selected);
   if (context.exact || text.includes(normalize(selectedValue))) {
-    return { label: professionalCriterionLabels[key], selectedValue, status: 'match' };
+    return { key, selectedValue, status: 'match' };
   }
 
   const availableValues = availableAttributeValues(product, key);
   if (availableValues.some((value) => normalize(value) === normalize(selectedValue))) {
-    return { label: professionalCriterionLabels[key], selectedValue, status: 'match' };
+    return { key, selectedValue, status: 'match' };
   }
   if (availableValues.length) {
     return {
-      label: professionalCriterionLabels[key],
+      key,
       selectedValue,
       availableValues,
       status: 'available',
@@ -267,8 +291,8 @@ const criterionForFilter = (
     .find((value) => value && text.includes(normalize(value)));
 
   return actualValue
-    ? { label: professionalCriterionLabels[key], selectedValue, actualValue, status: 'mismatch' }
-    : { label: professionalCriterionLabels[key], selectedValue, status: 'unknown' };
+    ? { key, selectedValue, actualValue, status: 'mismatch' }
+    : { key, selectedValue, status: 'unknown' };
 };
 
 export const buildMatchCriteria = (
@@ -294,7 +318,7 @@ export const buildMatchCriteria = (
     const positive = rule.positive.some((term) => text.includes(normalize(term)));
     const negative = rule.negative.some((term) => text.includes(normalize(term)));
     criteria.push({
-      label: 'Einsatzbereich',
+      key: 'application',
       selectedValue: rule.label,
       status: positive ? 'match' : negative ? 'mismatch' : 'unknown',
     });
@@ -307,7 +331,7 @@ export const buildMatchCriteria = (
       corrosive: 'Stark korrosiv',
     };
     criteria.push({
-      label: 'Umgebung',
+      key: 'environment',
       selectedValue: environmentLabels[answers.environment],
       status: exact && (answers.environment === 'outdoor' || answers.environment === 'corrosive') ? 'match' : 'unknown',
     });
@@ -321,7 +345,7 @@ export const buildMatchCriteria = (
       concealed: 'Nahezu unsichtbar',
     };
     criteria.push({
-      label: 'Kopfwirkung',
+      key: 'headPreference',
       selectedValue: headLabels[answers.headPreference],
       status: signal?.terms.some((term) => text.includes(normalize(term))) ? 'match' : 'unknown',
     });
@@ -331,7 +355,7 @@ export const buildMatchCriteria = (
       (preference) => preference.reason === 'passt zur Belastung',
     );
     criteria.push({
-      label: 'Belastung',
+      key: 'demand',
       selectedValue: { light: 'Leicht', general: 'Allgemein', heavy: 'Hoch' }[answers.demand],
       status: signal?.terms.some((term) => text.includes(normalize(term))) ? 'match' : 'unknown',
     });
@@ -409,23 +433,22 @@ export const buildNearbyMatches = (
       const differences = criteria
         .filter((criterion) => criterion.status === 'mismatch')
         .map(
-          (criterion) =>
-            `${criterion.label}: ${criterion.actualValue ?? 'abweichend'} statt ${criterion.selectedValue}.`,
+          (criterion) => `${criterion.key}: ${criterion.actualValue ?? 'abweichend'} statt ${criterion.selectedValue}.`,
         );
-      const criterionWeights: Record<string, number> = {
-        Werkstoff: 1000,
-        Durchmesser: 18,
-        Gesamtlänge: 18,
-        Kopfform: 8,
-        Antrieb: 4,
-        Packungsmenge: 2,
-        Einsatzbereich: 8,
-        Umgebung: 1000,
-        Kopfwirkung: 5,
-        Belastung: 4,
+      const criterionWeights: Record<ScrewFinderCriterion['key'], number> = {
+        material: 1000,
+        diameter: 18,
+        length: 18,
+        head: 8,
+        drive: 4,
+        package: 2,
+        application: 8,
+        environment: 1000,
+        headPreference: 5,
+        demand: 4,
       };
       const distance = criteria.reduce((total, criterion) => {
-        const weight = criterionWeights[criterion.label] ?? 3;
+        const weight = criterionWeights[criterion.key];
         if (criterion.status === 'mismatch') return total + weight;
         if (criterion.status === 'available') return total + weight;
         if (criterion.status === 'unknown') return total + weight / 3;

@@ -6,6 +6,7 @@ export type ScrewFinderEnvironment = 'indoor' | 'protected' | 'outdoor' | 'corro
 export type ScrewFinderHeadPreference = 'flush' | 'low-profile' | 'clamping' | 'concealed' | 'any';
 export type ScrewFinderDemand = 'light' | 'general' | 'heavy';
 export type ScrewFinderFacetKey = 'material' | 'head' | 'drive' | 'diameter' | 'length' | 'package';
+export type ScrewFinderCriterionKey = ScrewFinderFacetKey | 'application' | 'environment' | 'headPreference' | 'demand';
 export type ScrewFinderBeginnerGuidance = {
   headPreferences: ScrewFinderHeadPreference[];
   demands: ScrewFinderDemand[];
@@ -94,7 +95,7 @@ export type ScrewFinderAnswerSummary = {
 export type ScrewFinderCriterionStatus = 'match' | 'mismatch' | 'available' | 'unknown';
 
 export type ScrewFinderCriterion = {
-  label: string;
+  key: ScrewFinderCriterionKey;
   selectedValue: string;
   actualValue?: string;
   availableValues?: string[];

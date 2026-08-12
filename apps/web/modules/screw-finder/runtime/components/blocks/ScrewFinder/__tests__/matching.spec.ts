@@ -4,7 +4,9 @@ import {
   buildScrewFinderProductPath,
   buildMatchCriteria,
   buildNearbyMatches,
+  getRequiredFacetFilterBranches,
   getRequiredFacetFilters,
+  getSafetyCriticalFilterBranches,
   getSafetyCriticalFilters,
   hasRequiredSafetyFilters,
   rankScrewFinderProducts,
@@ -80,6 +82,21 @@ describe('Screw Finder matching', () => {
     const filters = getRequiredFacetFilters({ path: 'beginner', environment: 'corrosive' }, resolved);
 
     expect(filters.map((filter) => filter.id)).toEqual([97]);
+  });
+
+  it('should create separate A2 and A4 exact-result branches for outdoor use', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+    const branches = getRequiredFacetFilterBranches(
+      { path: 'beginner', environment: 'outdoor', diameter: facets[2]?.values?.[0] },
+      resolved,
+    );
+
+    expect(branches.map(serializeFacetFilters)).toEqual(['96,130', '97,130']);
+    expect(
+      getSafetyCriticalFilterBranches({ path: 'beginner', environment: 'outdoor' }, resolved).map(
+        serializeFacetFilters,
+      ),
+    ).toEqual(['96', '97']);
   });
 
   it('should reject corrosive recommendations when the live facets do not provide A4', () => {
@@ -167,16 +184,16 @@ describe('Screw Finder matching', () => {
 
     expect(matches[0]?.exact).toBe(false);
     expect(matches[0]?.criteria).toEqual([
-      { label: 'Werkstoff', selectedValue: 'A4', status: 'unknown' },
+      { key: 'material', selectedValue: 'A4', status: 'unknown' },
       {
-        label: 'Kopfform',
+        key: 'head',
         selectedValue: 'Tellerkopf',
         actualValue: 'Senkkopf',
         status: 'mismatch',
       },
-      { label: 'Durchmesser', selectedValue: '5 mm', status: 'match' },
+      { key: 'diameter', selectedValue: '5 mm', status: 'match' },
     ]);
-    expect(matches[0]?.differences).toEqual(['Kopfform: Senkkopf statt Tellerkopf.']);
+    expect(matches[0]?.differences).toEqual(['head: Senkkopf statt Tellerkopf.']);
   });
 
   it('should mark exact professional criteria as confirmed by the filtered response', () => {
@@ -209,7 +226,7 @@ describe('Screw Finder matching', () => {
     );
 
     expect((matches[0]?.product as Product & { testName?: string }).testName).toContain('Senkkopf');
-    expect(matches[0]?.criteria.find((criterion) => criterion.label === 'Werkstoff')?.status).toBe('match');
+    expect(matches[0]?.criteria.find((criterion) => criterion.key === 'material')?.status).toBe('match');
   });
 
   it('should expose selectable product dimensions as available near misses', () => {
@@ -244,12 +261,12 @@ describe('Screw Finder matching', () => {
 
     expect(criteria).toEqual([
       {
-        label: 'Durchmesser',
+        key: 'diameter',
         selectedValue: '10 mm',
         availableValues: ['8 mm'],
         status: 'available',
       },
-      { label: 'Gesamtlänge', selectedValue: '50 mm', status: 'match' },
+      { key: 'length', selectedValue: '50 mm', status: 'match' },
     ]);
   });
 
@@ -268,7 +285,7 @@ describe('Screw Finder matching', () => {
 
     expect(criteria).toEqual([
       {
-        label: 'Packungsmenge',
+        key: 'package',
         selectedValue: '2500 Stück',
         availableValues: ['1000 Stück', '5000 Stück'],
         status: 'available',

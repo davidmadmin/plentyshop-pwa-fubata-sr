@@ -388,7 +388,7 @@
                       >
                         <li
                           v-for="criterion in match.criteria"
-                          :key="`${criterion.label}-${criterion.selectedValue}`"
+                          :key="`${criterion.key}-${criterion.selectedValue}`"
                           class="flex items-start gap-1.5"
                           :class="criterionStatusClass(criterion.status)"
                         >
@@ -399,7 +399,7 @@
                             {{ criterionStatusIcon(criterion.status) }}
                           </span>
                           <span>
-                            <strong>{{ criterion.label }}:</strong>
+                            <strong>{{ criterionLabel(criterion.key) }}:</strong>
                             <span v-if="criterion.status === 'available'" class="ml-1">
                               {{ t('availableIn', { values: formatAvailableValues(criterion.availableValues ?? []) }) }}
                             </span>
@@ -466,6 +466,7 @@ import type {
   ScrewFinderAnswerSummary,
   ScrewFinderAnswers,
   ScrewFinderApplication,
+  ScrewFinderCriterionKey,
   ScrewFinderCriterionStatus,
   ScrewFinderDemand,
   ScrewFinderFacetKey,
@@ -479,7 +480,8 @@ import {
   buildScrewFinderProductPath,
   buildNearbyMatches,
   getFilterName,
-  getRequiredFacetFilters,
+  getRequiredFacetFilterBranches,
+  getSafetyCriticalFilterBranches,
   getSafetyCriticalFilters,
   hasRequiredSafetyFilters,
   rankScrewFinderProducts,
@@ -526,6 +528,7 @@ const automaticProfessionalKeys = ref<Set<ScrewFinderFacetKey>>(new Set());
 let professionalRequestId = 0;
 let beginnerRequestId = 0;
 let resultsRequestId = 0;
+let preparedTransitionId = 0;
 
 const facetMap = computed(() => resolveScrewFinderFacets(facetCatalog.value?.facets ?? []));
 const beginnerFacetMap = computed(() =>
@@ -537,14 +540,18 @@ const beginnerLengthFacetMap = computed(() =>
 const professionalFacetMap = computed(() =>
   resolveScrewFinderFacets(professionalFacetCatalog.value?.facets ?? facetCatalog.value?.facets ?? []),
 );
-const requiredFilters = computed(() => getRequiredFacetFilters(answers, facetMap.value));
+const requiredFilterBranches = computed(() => getRequiredFacetFilterBranches(answers, facetMap.value));
 const safetyCriticalFilters = computed(() => getSafetyCriticalFilters(answers, facetMap.value));
+const safetyCriticalFilterBranches = computed(() => getSafetyCriticalFilterBranches(answers, facetMap.value));
 const safetyFiltersAvailable = computed(() => hasRequiredSafetyFilters(answers, facetMap.value));
 const allMatchesUrl = computed(() => {
   if (!safetyFiltersAvailable.value) {
     return '';
   }
-  const facets = serializeFacetFilters(requiredFilters.value);
+  const allRequiredFilters = [
+    ...new Map(requiredFilterBranches.value.flat().map((filter) => [String(filter.id), filter])).values(),
+  ];
+  const facets = serializeFacetFilters(allRequiredFilters);
   const path = localePath(resolvedContent.value.sourceCategoryPath);
   return facets ? `${path}?facets=${encodeURIComponent(facets)}` : path;
 });
@@ -755,19 +762,36 @@ const optionGroupWidthClass = (count: number) =>
 
 const focusStage = () => nextTick(() => stageElement.value?.focus({ preventScroll: true }));
 const wait = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
-const runPreparedTransition = async (work: (acknowledged: Promise<void>) => Promise<void>) => {
+const cancelPendingTransition = () => {
+  preparedTransitionId += 1;
+  professionalRequestId += 1;
+  beginnerRequestId += 1;
+  resultsRequestId += 1;
+  loadingProfessionalFacets.value = false;
+  loadingBeginnerFacets.value = false;
+  loadingResults.value = false;
+  preparingNextStage.value = false;
+  showPreparationIndicator.value = false;
+};
+const runPreparedTransition = async (work: (acknowledged: Promise<boolean>) => Promise<void>) => {
   if (preparingNextStage.value) return;
+  const transitionId = ++preparedTransitionId;
   preparingNextStage.value = true;
   showPreparationIndicator.value = false;
   const indicatorTimer = setTimeout(() => {
-    showPreparationIndicator.value = true;
+    if (transitionId === preparedTransitionId) {
+      showPreparationIndicator.value = true;
+    }
   }, 700);
   try {
-    await work(wait(600));
+    const acknowledged = wait(600).then(() => transitionId === preparedTransitionId);
+    await work(acknowledged);
   } finally {
     clearTimeout(indicatorTimer);
-    showPreparationIndicator.value = false;
-    preparingNextStage.value = false;
+    if (transitionId === preparedTransitionId) {
+      showPreparationIndicator.value = false;
+      preparingNextStage.value = false;
+    }
   }
 };
 const navigateToStage = (stage: string, remember = true) => {
@@ -777,11 +801,13 @@ const navigateToStage = (stage: string, remember = true) => {
   liveMessage.value = t('stageChanged');
   focusStage();
 };
-const advance = async (acknowledged: Promise<void> = Promise.resolve()) => {
+const advance = async (acknowledged: Promise<boolean> = Promise.resolve(true)) => {
   const nextStage = stages.value[currentStepIndex.value + 1];
   if (nextStage === 'results') await showResults(acknowledged);
   else if (nextStage) {
-    await acknowledged;
+    if (!(await acknowledged)) {
+      return;
+    }
     navigateToStage(nextStage);
   }
 };
@@ -825,6 +851,7 @@ const chooseProfessional = (filter: Filter) => {
   void runPreparedTransition((acknowledged) => openNextProfessionalStage(currentStepIndex.value, acknowledged));
 };
 const goBack = () => {
+  cancelPendingTransition();
   let previous = stageHistory.value.pop();
   if (!previous) return restart();
   if (answers.path === 'professional') {
@@ -845,6 +872,7 @@ const goBack = () => {
   focusStage();
 };
 const restart = () => {
+  cancelPendingTransition();
   transitionDirection.value = 'back';
   activeStage.value = 'intro';
   stageHistory.value = [];
@@ -852,13 +880,7 @@ const restart = () => {
   nearbyMatches.value = [];
   automaticProfessionalKeys.value = new Set();
   professionalFacetCatalog.value = facetCatalog.value;
-  loadingProfessionalFacets.value = false;
-  loadingBeginnerFacets.value = false;
-  loadingResults.value = false;
   facetError.value = '';
-  professionalRequestId += 1;
-  beginnerRequestId += 1;
-  resultsRequestId += 1;
   beginnerFacetCatalog.value = facetCatalog.value;
   beginnerLengthFacetCatalog.value = facetCatalog.value;
   preparingNextStage.value = false;
@@ -899,6 +921,7 @@ const updateBeginnerSize = (key: 'diameter' | 'length', filter?: Filter) => {
 const requestResults = () => {
   void runPreparedTransition((acknowledged) => showResults(acknowledged));
 };
+const criterionLabel = (key: ScrewFinderCriterionKey) => t(`summary.${key}`);
 const criterionStatusIcon = (status: ScrewFinderCriterionStatus) =>
   status === 'match' ? '✓' : status === 'mismatch' ? '×' : status === 'available' ? '!' : '?';
 const criterionStatusClass = (status: ScrewFinderCriterionStatus) =>
@@ -1040,6 +1063,23 @@ const fetchAllCandidates = async (facets: string) => {
 const uniqueProductsByItem = (products: Product[]) => [
   ...new Map(products.map((product) => [String(productGetters.getItemId(product)), product])).values(),
 ];
+const uniqueProductsByVariation = (products: Product[]) => {
+  const seen = new Set<string>();
+  return products.filter((product, index) => {
+    const itemId = String(productGetters.getItemId(product) ?? '');
+    const variationId = String(productGetters.getVariationId(product) ?? '');
+    const key = itemId || variationId ? `${itemId}-${variationId}` : `unknown-${index}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+const fetchCandidateBranches = async (branches: Filter[][]) =>
+  uniqueProductsByVariation(
+    (await Promise.all(branches.map((filters) => fetchAllCandidates(serializeFacetFilters(filters))))).flat(),
+  );
 const enrichAlternativeProducts = async (products: Product[]) =>
   Promise.all(
     products.map(async (product) => {
@@ -1116,7 +1156,7 @@ const restoreProfessionalFacetState = async (stage: string) => {
   await loadProfessionalFacetCatalog(professionalFiltersBeforeStage(stage));
 };
 
-const openNextProfessionalStage = async (fromIndex: number, acknowledged: Promise<void> = Promise.resolve()) => {
+const openNextProfessionalStage = async (fromIndex: number, acknowledged: Promise<boolean> = Promise.resolve(true)) => {
   let nextIndex = fromIndex + 1;
   while (nextIndex < professionalStages.value.length) {
     const nextStage = professionalStages.value[nextIndex];
@@ -1153,14 +1193,16 @@ const openNextProfessionalStage = async (fromIndex: number, acknowledged: Promis
       continue;
     }
 
-    await acknowledged;
+    if (!(await acknowledged)) {
+      return;
+    }
     professionalFacetCatalog.value = catalog;
     navigateToStage(nextStage);
     return;
   }
 };
 
-const showResults = async (acknowledged: Promise<void> = Promise.resolve()) => {
+const showResults = async (acknowledged: Promise<boolean> = Promise.resolve(true)) => {
   const requestId = ++resultsRequestId;
   professionalRequestId += 1;
   loadingProfessionalFacets.value = false;
@@ -1170,7 +1212,9 @@ const showResults = async (acknowledged: Promise<void> = Promise.resolve()) => {
   nearbyMatches.value = [];
   if (!safetyFiltersAvailable.value) {
     facetError.value = t('safetyFacetUnavailable');
-    await acknowledged;
+    if (!(await acknowledged)) {
+      return;
+    }
     if (requestId !== resultsRequestId) {
       return;
     }
@@ -1179,14 +1223,14 @@ const showResults = async (acknowledged: Promise<void> = Promise.resolve()) => {
     return;
   }
   try {
-    const exactProducts = await fetchAllCandidates(serializeFacetFilters(requiredFilters.value));
+    const exactProducts = await fetchCandidateBranches(requiredFilterBranches.value);
     if (requestId !== resultsRequestId) {
       return;
     }
     matches.value = rankScrewFinderProducts(exactProducts, answers, resolvedContent.value.resultCount, facetMap.value);
     const remainingSlots = resolvedContent.value.resultCount - matches.value.length;
     if (remainingSlots > 0) {
-      const alternativeProducts = await fetchAllCandidates(serializeFacetFilters(safetyCriticalFilters.value));
+      const alternativeProducts = await fetchCandidateBranches(safetyCriticalFilterBranches.value);
       if (requestId !== resultsRequestId) {
         return;
       }
@@ -1212,7 +1256,9 @@ const showResults = async (acknowledged: Promise<void> = Promise.resolve()) => {
         confirmedFilters: safetyCriticalFilters.value,
       });
     }
-    await acknowledged;
+    if (!(await acknowledged)) {
+      return;
+    }
     if (requestId !== resultsRequestId) {
       return;
     }
@@ -1225,7 +1271,9 @@ const showResults = async (acknowledged: Promise<void> = Promise.resolve()) => {
       return;
     }
     facetError.value = t('loadError');
-    await acknowledged;
+    if (!(await acknowledged)) {
+      return;
+    }
     if (requestId !== resultsRequestId) {
       return;
     }
@@ -1246,7 +1294,9 @@ const openAnswerSummary = (summary: ScrewFinderAnswerSummary) => {
     if (answers.path === 'professional') {
       await loadProfessionalFacetCatalog(professionalFiltersBeforeStage(summary.stage));
     }
-    await acknowledged;
+    if (!(await acknowledged)) {
+      return;
+    }
     navigateToStage(summary.stage);
   });
 };
