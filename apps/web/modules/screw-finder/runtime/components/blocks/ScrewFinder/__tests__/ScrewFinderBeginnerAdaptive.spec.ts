@@ -105,6 +105,32 @@ describe('ScrewFinder adaptive beginner flow', () => {
     expect(wrapper.text()).not.toContain('How should the screw head look?');
   });
 
+  it('should fail closed for an outdoor application when the environment question is disabled', async () => {
+    getFacet.mockResolvedValue(facetResponse([], 5));
+    const wrapper = mount(ScrewFinder, {
+      props: {
+        ...props,
+        content: {
+          ...props.content,
+          stages: {
+            beginnerEnvironment: false,
+            beginnerHead: false,
+            beginnerDemand: false,
+            beginnerExactSize: false,
+          },
+        },
+      },
+    });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="screw-finder-beginner"]').trigger('click');
+    await waitForTransition();
+    await choose(wrapper, 'Decking & outdoors');
+
+    expect(wrapper.text()).toContain('No product recommendations are shown for safety reasons.');
+    expect(getFacet).not.toHaveBeenCalledWith(expect.objectContaining({ itemsPerPage: 50 }));
+  });
+
   it('should clear only beginner answers that become invalid after changing the application', async () => {
     const wrapper = mount(ScrewFinder, { props });
     await flushPromises();

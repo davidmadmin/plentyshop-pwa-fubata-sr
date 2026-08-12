@@ -3,6 +3,7 @@ import type {
   ScrewFinderAnswers,
   ScrewFinderApplication,
   ScrewFinderCriterion,
+  ScrewFinderEnvironment,
   ScrewFinderFacetKey,
   ScrewFinderFacetMap,
   ScrewFinderMatch,
@@ -26,32 +27,45 @@ const facetAliases: Record<ScrewFinderFacetKey, string[]> = {
   package: ['menge', 'packungsinhalt', 'quantity', 'package'],
 };
 
-const applicationRules: Record<ScrewFinderApplication, { positive: string[]; negative: string[] }> = {
+const applicationRules: Record<
+  ScrewFinderApplication,
+  { positive: string[]; negative: string[]; requiresOutdoorMaterial: boolean }
+> = {
   interior: {
     positive: ['spanplatte', 'mobel', 'innenbereich', 'holzschraube', 'senkkopf'],
     negative: ['gipskarton', 'fensterrahmen', 'spengler'],
+    requiresOutdoorMaterial: false,
   },
   structural: {
     positive: ['konstruktiver holzbau', 'tragende', 'eta', 'tellerkopf', 'pfosten', 'vollgewinde'],
     negative: ['gipskarton', 'spengler'],
+    requiresOutdoorMaterial: false,
   },
   terrace: {
     positive: ['terrasse', 'terrassendiele', 'aussenanwendung', 'edelstahl', 'a2', 'a4'],
     negative: ['gipskarton', 'innenbereich'],
+    requiresOutdoorMaterial: true,
   },
   drywall: {
     positive: ['gipskarton', 'trockenbau', 'gipsfaser', 'schnellbauschraube', 'trompetenkopf'],
     negative: ['terrasse', 'fensterrahmen', 'spengler'],
+    requiresOutdoorMaterial: false,
   },
   window: {
     positive: ['fensterrahmen', 'fenstermontage', 'rahmenschraube', 'fenster'],
     negative: ['gipskarton', 'terrassendiele'],
+    requiresOutdoorMaterial: false,
   },
   roofing: {
     positive: ['spengler', 'dach', 'fassade', 'epdm', 'blech'],
     negative: ['gipskarton', 'mobel'],
+    requiresOutdoorMaterial: true,
   },
 };
+
+const getEffectiveBeginnerEnvironment = (answers: ScrewFinderAnswers): ScrewFinderEnvironment | undefined =>
+  answers.environment ??
+  (answers.application && applicationRules[answers.application].requiresOutdoorMaterial ? 'outdoor' : undefined);
 
 export const resolveScrewFinderFacets = (facets: FilterGroup[]): ScrewFinderFacetMap => {
   const dynamicFacets = facets.filter((facet) => facet.type === 'dynamic');
@@ -86,8 +100,13 @@ export const getRequiredFacetFilters = (answers: ScrewFinderAnswers, facets: Scr
     add(answers.drive);
     add(answers.package);
   } else {
-    if (answers.environment === 'outdoor') add(getFacetValue(facets.material, ['a2', 'a4']));
-    if (answers.environment === 'corrosive') add(getFacetValue(facets.material, ['a4']));
+    const environment = getEffectiveBeginnerEnvironment(answers);
+    if (environment === 'outdoor') {
+      add(getFacetValue(facets.material, ['a2', 'a4']));
+    }
+    if (environment === 'corrosive') {
+      add(getFacetValue(facets.material, ['a4']));
+    }
     add(answers.diameter);
     add(answers.length);
   }
@@ -97,12 +116,13 @@ export const getRequiredFacetFilters = (answers: ScrewFinderAnswers, facets: Scr
 
 export const getSafetyCriticalFilters = (answers: ScrewFinderAnswers, facets: ScrewFinderFacetMap): Filter[] => {
   if (answers.path === 'professional') return answers.material ? [answers.material] : [];
-  if (answers.environment === 'outdoor') {
+  const environment = getEffectiveBeginnerEnvironment(answers);
+  if (environment === 'outdoor') {
     return ['a2', 'a4']
       .map((material) => getFacetValue(facets.material, [material]))
       .filter((filter): filter is Filter => Boolean(filter));
   }
-  if (answers.environment === 'corrosive') {
+  if (environment === 'corrosive') {
     const material = getFacetValue(facets.material, ['a4']);
     return material ? [material] : [];
   }
@@ -117,7 +137,7 @@ export const getRequiredFacetFilterBranches = (
   facets: ScrewFinderFacetMap,
 ): Filter[][] => {
   const requiredFilters = getRequiredFacetFilters(answers, facets);
-  if (answers.path !== 'beginner' || answers.environment !== 'outdoor') {
+  if (answers.path !== 'beginner' || getEffectiveBeginnerEnvironment(answers) !== 'outdoor') {
     return [requiredFilters];
   }
 
@@ -135,7 +155,7 @@ export const getSafetyCriticalFilterBranches = (
   facets: ScrewFinderFacetMap,
 ): Filter[][] => {
   const safetyFilters = getSafetyCriticalFilters(answers, facets);
-  return answers.path === 'beginner' && answers.environment === 'outdoor'
+  return answers.path === 'beginner' && getEffectiveBeginnerEnvironment(answers) === 'outdoor'
     ? safetyFilters.map((filter) => [filter])
     : [safetyFilters];
 };
@@ -147,10 +167,11 @@ export const hasRequiredSafetyFilters = (answers: ScrewFinderAnswers, facets: Sc
   if (answers.path !== 'beginner') {
     return true;
   }
-  if (answers.environment === 'outdoor') {
+  const environment = getEffectiveBeginnerEnvironment(answers);
+  if (environment === 'outdoor') {
     return Boolean(getFacetValue(facets.material, ['a2', 'a4']));
   }
-  if (answers.environment === 'corrosive') {
+  if (environment === 'corrosive') {
     return Boolean(getFacetValue(facets.material, ['a4']));
   }
   return true;
@@ -383,7 +404,8 @@ export const rankScrewFinderProducts = (
         }
       }
 
-      if (answers.environment === 'outdoor' || answers.environment === 'corrosive') {
+      const environment = getEffectiveBeginnerEnvironment(answers);
+      if (environment === 'outdoor' || environment === 'corrosive') {
         reasons.push('corrosionResistant');
       }
       if (answers.diameter || answers.length) reasons.push('selectedSize');

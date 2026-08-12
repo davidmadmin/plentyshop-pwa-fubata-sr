@@ -115,6 +115,21 @@ describe('Screw Finder matching', () => {
     expect(hasRequiredSafetyFilters({ path: 'beginner', environment: 'outdoor' }, resolved)).toBe(true);
   });
 
+  it('should infer outdoor material safety when an outdoor application skips the environment question', () => {
+    const resolved = resolveScrewFinderFacets(facets);
+
+    const terraceBranches = getRequiredFacetFilterBranches({ path: 'beginner', application: 'terrace' }, resolved);
+    const roofingSafetyBranches = getSafetyCriticalFilterBranches(
+      { path: 'beginner', application: 'roofing' },
+      resolved,
+    );
+
+    expect(terraceBranches.map(serializeFacetFilters)).toEqual(['96', '97']);
+    expect(roofingSafetyBranches.map(serializeFacetFilters)).toEqual(['96', '97']);
+    expect(hasRequiredSafetyFilters({ path: 'beginner', application: 'terrace' }, {})).toBe(false);
+    expect(hasRequiredSafetyFilters({ path: 'beginner', application: 'interior' }, {})).toBe(true);
+  });
+
   it('should preserve every selected professional specification', () => {
     const resolved = resolveScrewFinderFacets(facets);
     const filters = getRequiredFacetFilters(
