@@ -19,6 +19,7 @@ const blocksList = {
             content: {
               fields: {
                 itemName: true,
+                variationNumber: false,
                 price: true,
                 tags: true,
                 availability: true,
@@ -32,10 +33,12 @@ const blocksList = {
                 addToWishlist: true,
                 quantityAndAddToCart: true,
                 itemText: false,
+                guaranteeLabel: true,
                 technicalData: false,
               },
               fieldsOrder: [
                 'itemName',
+                'variationNumber',
                 'price',
                 'tags',
                 'availability',
@@ -49,6 +52,7 @@ const blocksList = {
                 'addToWishlist',
                 'quantityAndAddToCart',
                 'itemText',
+                'guaranteeLabel',
                 'technicalData',
               ],
               fieldsDisabled: ['quantityAndAddToCart', 'price', 'itemBundle', 'attributes'],
@@ -75,6 +79,7 @@ const blocksList = {
             content: {
               fields: {
                 itemName: true,
+                variationNumber: false,
                 price: true,
                 tags: true,
                 availability: true,
@@ -88,10 +93,12 @@ const blocksList = {
                 addToWishlist: true,
                 quantityAndAddToCart: true,
                 itemText: false,
+                guaranteeLabel: true,
                 technicalData: false,
               },
               fieldsOrder: [
                 'itemName',
+                'variationNumber',
                 'price',
                 'tags',
                 'availability',
@@ -105,6 +112,7 @@ const blocksList = {
                 'addToWishlist',
                 'quantityAndAddToCart',
                 'itemText',
+                'guaranteeLabel',
                 'technicalData',
               ],
               fieldsDisabled: ['quantityAndAddToCart', 'price', 'itemBundle', 'attributes'],
